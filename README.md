@@ -26,19 +26,16 @@ services:
     - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
     - FULL_SYNC=true
     - CRON=0 * * * *
-    restart: unless-stopped
 ```
 
 ### Docker CLI
 
 ```bash
-docker run -d \
+docker run --rm \
   --name nebula-sync \
-  -e PRIMARY=http://ph1.example.com|password \
-  -e REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password \
+  -e PRIMARY="http://ph1.example.com|password" \
+  -e REPLICAS="http://ph2.example.com|password" \
   -e FULL_SYNC=true \
-  -e CRON=0 * * * * \
-  --restart unless-stopped \
   ghcr.io/lovelaze/nebula-sync:latest
 ```
 

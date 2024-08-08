@@ -1,0 +1,10 @@
+with-expecter: True
+dir: internal/mocks/{{.PackageName}}
+mockname: "{{.InterfaceName}}"
+outpkg: "{{.PackageName}}"
+filename: "{{.InterfaceName}}.go"
+all: True
+packages:
+  github.com/lovelaze/nebula-sync:
+    config:
+      recursive: True

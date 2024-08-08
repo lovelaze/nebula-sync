@@ -2,7 +2,7 @@
 
 [![Go](https://github.com/lovelaze/nebula-sync/actions/workflows/test.yml/badge.svg)](https://github.com/lovelaze/nebula-sync/actions/workflows/test.yml)
 
-Synchronize Pi-hole 6+ configuration to replicas.
+Synchronize Pi-hole v6.x configuration to replicas.
 
 This project is not a part of the [official Pi-hole project](https://github.com/pi-hole), but uses the api provided by Pi-hole instances to perform the synchronization actions.
 

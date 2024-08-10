@@ -25,20 +25,21 @@ func NewPiHole(host, password string) PiHole {
 }
 
 func (piHole *PiHole) Decode(value string) error {
-	split := strings.Split(value, "|")
-	if len(split) != 2 {
+	uri, password, found := strings.Cut(value, "|")
+
+	if !found {
 		return fmt.Errorf("invalid pihole format")
 	}
 
-	res, err := url.Parse(split[0])
+	parsedUrl, err := url.Parse(uri)
 
 	if err != nil {
 		return fmt.Errorf("failed to parse url: %s", err)
 	}
 
 	*piHole = PiHole{
-		Url:      res,
-		Password: split[1],
+		Url:      parsedUrl,
+		Password: password,
 	}
 	return nil
 }

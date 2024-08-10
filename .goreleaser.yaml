@@ -25,13 +25,6 @@ archives:
       - goos: windows
         format: zip
 
-dockers:
-  -
-    image_templates:
-      - ghcr.io/lovelaze/nebula-sync:latest
-      - ghcr.io/lovelaze/nebula-sync:{{ .Tag }}
-    goos: linux
-
 checksum:
   name_template: 'checksums.txt'
 snapshot:

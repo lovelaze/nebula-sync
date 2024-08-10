@@ -48,7 +48,20 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      -
+        name: Checkout
         uses: actions/checkout@v4
-      - name: Release
-        uses: softprops/action-gh-release@v2
+        with:
+          fetch-depth: 0
+      -
+        name: Set up Go
+        uses: actions/setup-go@v5
+      -
+        name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -14,7 +14,7 @@ builds:
 
 upx:
   - enabled: true
-    goos: [linux, darwin]
+    goos: [linux]
     compress: best
     lzma: true
     brute: true

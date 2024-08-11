@@ -17,12 +17,11 @@ This project is not a part of the [official Pi-hole project](https://github.com/
 Download binary from the [latest release](https://github.com/lovelaze/nebula-sync/releases/latest)
 ```bash
 
-# run once
+# run
 nebula-sync run
 
-# run and sync every hour
-export CRON="* * * * *"
-nebula-sync run
+# read envs from file
+nebula-sync run --env-file .env
 ```
 
 ### Docker Compose (recommended)

@@ -13,6 +13,18 @@ This project is not a part of the [official Pi-hole project](https://github.com/
 
 ## Installation
 
+### Linux/OSX binary
+Download binary from the [latest release](https://github.com/lovelaze/nebula-sync/releases/latest)
+```bash
+
+# run once
+nebula-sync run
+
+# run and sync every hour
+export CRON="* * * * *"
+nebula-sync run
+```
+
 ### Docker Compose (recommended)
 
 ```yaml

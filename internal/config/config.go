@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
@@ -45,30 +46,34 @@ type SyncSettings struct {
 
 func (c *Config) Load() error {
 	if err := envconfig.Process("", c); err != nil {
-		return err
+		return fmt.Errorf("failed to process env vars: %w", err)
 	}
 
 	if !c.FullSync {
-		c.loadSyncSettings()
+		if err := c.loadSyncSettings(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func (c *Config) loadSyncSettings() {
+func (c *Config) loadSyncSettings() error {
 	manualGravity := ManualGravity{}
 	if err := envconfig.Process("", &manualGravity); err != nil {
-		log.Fatal().Err(err).Msg("Failed to process gravity env vars")
+		return fmt.Errorf("failed to process gravity env vars: %w", err)
 	}
 
 	manualConfig := ManualConfig{}
 	if err := envconfig.Process("", &manualConfig); err != nil {
-		log.Fatal().Err(err).Msg("Failed to process config env vars")
+		return fmt.Errorf("failed to process config env vars: %w", err)
 	}
 
 	c.SyncSettings = &SyncSettings{
 		Gravity: &manualGravity,
 		Config:  &manualConfig,
 	}
+
+	return nil
 }
 
 func LoadEnvFile(filename string) error {

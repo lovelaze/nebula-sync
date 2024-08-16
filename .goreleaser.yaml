@@ -36,3 +36,4 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^typo:"

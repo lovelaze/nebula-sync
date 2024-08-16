@@ -3,13 +3,13 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"github.com/testcontainers/testcontainers-go"
+	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"time"
 )
 
 type PiHoleContainer struct {
-	Container testcontainers.Container
+	Container tc.Container
 	password  string
 }
 
@@ -31,31 +31,26 @@ func (c *PiHoleContainer) EnvString() string {
 	return fmt.Sprintf("%s|%s", c.ConnectionString(), c.password)
 }
 
-func RunPiHole(ctx context.Context, password string, opts ...testcontainers.ContainerCustomizer) *PiHoleContainer {
-	req := testcontainers.ContainerRequest{
-		Image:        "pihole/pihole:development-v6",
-		ExposedPorts: []string{"80/tcp"},
-		WaitingFor:   wait.ForListeningPort("80").WithStartupTimeout(10 * time.Second),
-		Env: map[string]string{
-			"FTLCONF_webserver_api_password": password,
+func RunPiHole(password string) *PiHoleContainer {
+	containerReq := tc.GenericContainerRequest{
+		ContainerRequest: tc.ContainerRequest{
+			Image:        "pihole/pihole:development-v6",
+			ExposedPorts: []string{"80/tcp"},
+			WaitingFor:   wait.ForListeningPort("80").WithStartupTimeout(10 * time.Second),
+			Env: map[string]string{
+				"FTLCONF_webserver_api_password": password,
+			},
 		},
+		Started: true,
 	}
 
-	genericContainerReq := testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	}
-
-	for _, opt := range opts {
-		if err := opt.Customize(&genericContainerReq); err != nil {
-			panic(err)
-		}
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, genericContainerReq)
+	container, err := tc.GenericContainer(context.Background(), containerReq)
 	if err != nil {
 		panic(err)
 	}
 
-	return &PiHoleContainer{Container: container, password: password}
+	return &PiHoleContainer{
+		Container: container,
+		password:  password,
+	}
 }

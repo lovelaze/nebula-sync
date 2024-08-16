@@ -49,7 +49,8 @@ func TestConfig_loadSyncSettings(t *testing.T) {
 	t.Setenv("SYNC_GRAVITY_CLIENT", "true")
 	t.Setenv("SYNC_GRAVITY_CLIENT_BY_GROUP", "true")
 
-	conf.loadSyncSettings()
+	err := conf.loadSyncSettings()
+	require.NoError(t, err)
 
 	assert.NotNil(t, conf.SyncSettings.Config)
 	assert.NotNil(t, conf.SyncSettings.Gravity)

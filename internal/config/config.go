@@ -43,14 +43,15 @@ type SyncSettings struct {
 	Config  *ManualConfig  `ignored:"true"`
 }
 
-func (c *Config) Load() {
+func (c *Config) Load() error {
 	if err := envconfig.Process("", c); err != nil {
-		log.Fatal().Err(err).Msg("Failed to process env vars")
+		return err
 	}
 
 	if !c.FullSync {
 		c.loadSyncSettings()
 	}
+	return nil
 }
 
 func (c *Config) loadSyncSettings() {

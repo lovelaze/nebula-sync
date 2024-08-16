@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/sync"
@@ -14,7 +15,12 @@ type Service struct {
 	conf   config.Config
 }
 
-func NewService(conf config.Config) *Service {
+func Init() (*Service, error) {
+	conf := config.Config{}
+	if err := conf.Load(); err != nil {
+		return nil, err
+	}
+
 	primary := pihole.NewClient(conf.Primary)
 	var rs []pihole.Client
 	for _, replica := range conf.Replicas {
@@ -24,24 +30,25 @@ func NewService(conf config.Config) *Service {
 	return &Service{
 		target: sync.NewTarget(primary, rs),
 		conf:   conf,
-	}
+	}, nil
 }
 
-func (service *Service) Run() {
+func (service *Service) Run() error {
 	log.Info().Msgf("Starting nebula-sync v%s", version.Version)
 	log.Debug().Msgf("Settings cron=%v, fullsync=%v, syncsettings=%v", service.conf.Cron, service.conf.FullSync, service.conf.SyncSettings)
 
 	if service.conf.Cron == nil {
-		service.doSync(service.target)
+		return service.doSync(service.target)
 	} else {
-		service.startCron(func() {
-			service.doSync(service.target)
+		return service.startCron(func() {
+			if err := service.doSync(service.target); err != nil {
+				log.Error().Err(err).Msg("sync failed")
+			}
 		})
 	}
 }
 
-func (service *Service) doSync(t sync.Target) {
-	var err error
+func (service *Service) doSync(t sync.Target) (err error) {
 	if service.conf.FullSync {
 		err = t.FullSync()
 	} else {
@@ -49,19 +56,24 @@ func (service *Service) doSync(t sync.Target) {
 	}
 
 	if err != nil {
-		log.Error().Err(err).Msgf("Sync failed")
-		return
+		return fmt.Errorf("sync failed: %w", err)
 	}
 
 	log.Info().Msg("Sync complete")
+	return err
 }
 
-func (service *Service) startCron(cmd func()) {
+func (service *Service) startCron(cmd func()) error {
 	cron := cron.New()
 
 	if _, err := cron.AddFunc(*service.conf.Cron, cmd); err != nil {
-		log.Fatal().Err(err).Msgf("Failed to start cron: %s", *service.conf.Cron)
+		return fmt.Errorf("failed to start cron job: %w", err)
 	}
 
 	cron.Run()
+	return nil
+}
+
+func (service *Service) Target() sync.Target {
+	return service.target
 }

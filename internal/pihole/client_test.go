@@ -3,69 +3,66 @@ package pihole
 import (
 	"context"
 	"fmt"
+	"github.com/lovelaze/nebula-sync/e2e"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"log"
+	tc "github.com/testcontainers/testcontainers-go"
 	"testing"
-	"time"
 )
 
 const (
-	dockerImage string = "pihole/pihole:development-v6"
 	apiPassword string = "test"
 )
 
 var (
-	container = startContainer()
+	piHole = e2e.RunPiHole(context.Background(), apiPassword).Container
 )
 
-type ClientTestSuite struct {
+type clientTestSuite struct {
 	suite.Suite
 	client Client
 }
 
-func (suite *ClientTestSuite) SetupTest() {
-	client := createClient(container)
+func (suite *clientTestSuite) SetupTest() {
+	client := createClient(piHole)
 	err := client.Authenticate()
 	require.NoError(suite.T(), err)
 	suite.client = client
 }
 
 func TestClientIntegration(t *testing.T) {
-	suite.Run(t, new(ClientTestSuite))
+	suite.Run(t, new(clientTestSuite))
 }
 
-func (suite *ClientTestSuite) TestClient_Authenticate() {
+func (suite *clientTestSuite) TestClient_Authenticate() {
 	err := suite.client.Authenticate()
 
 	assert.NoError(suite.T(), err)
 }
 
-func (suite *ClientTestSuite) TestClient_DeleteSession() {
+func (suite *clientTestSuite) TestClient_DeleteSession() {
 	err := suite.client.DeleteSession()
 
 	assert.NoError(suite.T(), err)
 }
 
-func (suite *ClientTestSuite) TestClient_GetVersion() {
+func (suite *clientTestSuite) TestClient_GetVersion() {
 	version, err := suite.client.GetVersion()
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), version)
 }
 
-func (suite *ClientTestSuite) TestClient_GetTeleporter() {
+func (suite *clientTestSuite) TestClient_GetTeleporter() {
 	payload, err := suite.client.GetTeleporter()
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), payload)
 }
 
-func (suite *ClientTestSuite) TestClient_PostTeleporter() {
+func (suite *clientTestSuite) TestClient_PostTeleporter() {
 	payload, _ := suite.client.GetTeleporter()
 	err := suite.client.PostTeleporter(payload, &model.PostTeleporterRequest{
 		Config:     true,
@@ -84,14 +81,14 @@ func (suite *ClientTestSuite) TestClient_PostTeleporter() {
 	assert.NoError(suite.T(), err)
 }
 
-func (suite *ClientTestSuite) TestClient_GetConfig() {
+func (suite *clientTestSuite) TestClient_GetConfig() {
 	conf, err := suite.client.GetConfig()
 
 	assert.NoError(suite.T(), err)
 	assert.NotNil(suite.T(), conf)
 }
 
-func (suite *ClientTestSuite) TestClient_PatchConfig() {
+func (suite *clientTestSuite) TestClient_PatchConfig() {
 	request := model.PatchConfigRequest{
 		Config: model.PatchConfig{
 			DNS:      nil,
@@ -145,29 +142,7 @@ func Test_auth_verify(t *testing.T) {
 
 }
 
-func startContainer() testcontainers.Container {
-	containerRequest := testcontainers.ContainerRequest{
-		Image:        dockerImage,
-		ExposedPorts: []string{"80/tcp", "53/tcp", "53/udp"},
-		WaitingFor:   wait.ForListeningPort("80").WithStartupTimeout(30 * time.Second),
-		Env: map[string]string{
-			"FTLCONF_dns_upstreams":          "8.8.8.8",
-			"FTLCONF_webserver_api_password": apiPassword,
-		},
-	}
-
-	container, err := testcontainers.GenericContainer(context.Background(), testcontainers.GenericContainerRequest{
-		ContainerRequest: containerRequest,
-		Started:          true,
-	})
-
-	if err != nil {
-		log.Fatalf("starting pihole test container: %v", err)
-	}
-	return container
-}
-
-func createClient(container testcontainers.Container) Client {
+func createClient(container tc.Container) Client {
 	apiPort, err := container.MappedPort(context.Background(), "80/tcp")
 	if err != nil {
 		panic(err)
@@ -175,5 +150,5 @@ func createClient(container testcontainers.Container) Client {
 
 	host := fmt.Sprintf("http://localhost:%s", apiPort.Port())
 
-	return NewClient(model.NewPiHole(host, "test"))
+	return NewClient(model.NewPiHole(host, apiPassword))
 }

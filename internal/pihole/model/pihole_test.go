@@ -20,5 +20,4 @@ func TestPiHole_Decode(t *testing.T) {
 
 	assert.Equal(t, expectedUrl, ph.Url)
 	assert.Equal(t, pw, ph.Password)
-
 }

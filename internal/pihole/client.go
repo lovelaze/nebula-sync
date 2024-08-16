@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/lovelaze/nebula-sync/version"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"io"
 	"mime/multipart"
@@ -20,7 +21,11 @@ var (
 )
 
 func NewClient(piHole model.PiHole) Client {
-	return &client{PiHole: piHole}
+	logger := log.With().Str("client", piHole.Url.String()).Logger()
+	return &client{
+		PiHole: piHole,
+		logger: &logger,
+	}
 }
 
 type Client interface {
@@ -38,6 +43,7 @@ type Client interface {
 type client struct {
 	PiHole model.PiHole
 	auth   auth
+	logger *zerolog.Logger
 }
 
 type auth struct {
@@ -64,7 +70,7 @@ func (a *auth) verify() error {
 }
 
 func (client *client) Authenticate() error {
-	log.Debug().Msgf("Authenticate, client %s", client.String())
+	client.logger.Debug().Msg("Authenticate")
 	authResponse := model.AuthResponse{}
 
 	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.PiHole.Password})
@@ -110,7 +116,7 @@ func (client *client) Authenticate() error {
 }
 
 func (client *client) DeleteSession() error {
-	log.Debug().Msgf("Delete session, client %s", client.String())
+	client.logger.Debug().Msg("Delete session")
 	if err := client.auth.verify(); err != nil {
 		return err
 	}
@@ -137,7 +143,7 @@ func (client *client) DeleteSession() error {
 }
 
 func (client *client) GetVersion() (*model.VersionResponse, error) {
-	log.Debug().Msgf("Get version, client %s", client.String())
+	client.logger.Debug().Msg("Get version")
 	versionResponse := model.VersionResponse{}
 	if err := client.auth.verify(); err != nil {
 		return &versionResponse, err
@@ -170,7 +176,7 @@ func (client *client) GetVersion() (*model.VersionResponse, error) {
 }
 
 func (client *client) GetTeleporter() ([]byte, error) {
-	log.Debug().Msgf("Get teleporter, client %s", client.String())
+	client.logger.Debug().Msg("Get teleporter")
 	if err := client.auth.verify(); err != nil {
 		return nil, err
 	}
@@ -195,7 +201,8 @@ func (client *client) GetTeleporter() ([]byte, error) {
 }
 
 func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error {
-	log.Debug().Msgf("Post teleporter, client %s, request %v", client.String(), teleporterRequest)
+	client.logger.Debug().Any("payload", teleporterRequest).Msg("Post teleporter")
+
 	if err := client.auth.verify(); err != nil {
 		return err
 	}
@@ -243,7 +250,7 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 }
 
 func (client *client) GetConfig() (configResponse *model.ConfigResponse, err error) {
-	log.Debug().Msgf("Get config, client %s", client.String())
+	client.logger.Debug().Msg("Get config")
 	if err := client.auth.verify(); err != nil {
 		return configResponse, err
 	}
@@ -277,7 +284,7 @@ func (client *client) GetConfig() (configResponse *model.ConfigResponse, err err
 }
 
 func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error {
-	log.Debug().Msgf("Patch config, client %s", client.String())
+	client.logger.Debug().Any("payload", patchRequest).Msgf("Patch config")
 	if err := client.auth.verify(); err != nil {
 		return err
 	}

@@ -15,7 +15,8 @@ func TestConfig_Load(t *testing.T) {
 	t.Setenv("FULL_SYNC", "true")
 	t.Setenv("CRON", "* * * * *")
 
-	conf.Load()
+	err := conf.Load()
+	require.NoError(t, err)
 
 	assert.Equal(t, "http://localhost:1337", conf.Primary.Url.String())
 	assert.Equal(t, "asdf", conf.Primary.Password)

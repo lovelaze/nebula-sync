@@ -15,11 +15,14 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		readEnvFile()
 
-		conf := config.Config{}
-		conf.Load()
+		service, err := service.Init()
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to initialize service")
+		}
 
-		service := service.NewService(conf)
-		service.Run()
+		if err = service.Run(); err != nil {
+			log.Fatal().Err(err).Msg("service error")
+		}
 	},
 }
 

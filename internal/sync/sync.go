@@ -1,10 +1,10 @@
 package sync
 
 import (
+	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -28,15 +28,15 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 func (target *target) FullSync() error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running full sync")
 	if err := target.authenticate(); err != nil {
-		return errors.Wrap(err, "authentication failed")
+		return fmt.Errorf("authentication failed: %w", err)
 	}
 
 	if err := target.syncTeleporters(nil); err != nil {
-		return errors.Wrap(err, "sync Teleporters failed")
+		return fmt.Errorf("sync Teleporters failed: %w", err)
 	}
 
 	if err := target.deleteSessions(); err != nil {
-		return errors.Wrap(err, "delete sessions failed")
+		return fmt.Errorf("delete sessions failed: %w", err)
 	}
 
 	return nil
@@ -46,19 +46,19 @@ func (target *target) ManualSync(syncSettings *config.SyncSettings) error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running manual sync")
 
 	if err := target.authenticate(); err != nil {
-		return errors.Wrap(err, "authentication failed")
+		return fmt.Errorf("authentication failed: %w", err)
 	}
 
 	if err := target.syncTeleporters(syncSettings.Gravity); err != nil {
-		return errors.Wrap(err, "sync Teleporters failed")
+		return fmt.Errorf("sync Teleporters failed: %w", err)
 	}
 
 	if err := target.syncConfigs(syncSettings.Config); err != nil {
-		return errors.Wrap(err, "sync configs failed")
+		return fmt.Errorf("sync configs failed: %w", err)
 	}
 
 	if err := target.deleteSessions(); err != nil {
-		return errors.Wrap(err, "delete sessions failed")
+		return fmt.Errorf("delete sessions failed: %w", err)
 	}
 
 	return nil
@@ -116,6 +116,7 @@ func (target *target) syncTeleporters(manualGravity *config.ManualGravity) error
 }
 
 func (target *target) syncConfigs(manualConfig *config.ManualConfig) error {
+	log.Info().Msg("Syncing configs...")
 	configResponse, err := target.Primary.GetConfig()
 	if err != nil {
 		return err

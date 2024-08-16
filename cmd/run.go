@@ -17,11 +17,11 @@ var runCmd = &cobra.Command{
 
 		service, err := service.Init()
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to initialize service")
+			log.Fatal().Err(err).Msg("Failed to initialize service")
 		}
 
 		if err = service.Run(); err != nil {
-			log.Fatal().Err(err).Msg("service error")
+			log.Fatal().Err(err).Msg("Failed to run service")
 		}
 	},
 }
@@ -38,6 +38,6 @@ func readEnvFile() {
 	}
 
 	if err := config.LoadEnvFile(envFile); err != nil {
-		log.Fatal().Err(err).Msg("error loading env file")
+		log.Fatal().Err(err).Msg("Failed to load env file")
 	}
 }

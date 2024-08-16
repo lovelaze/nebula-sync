@@ -22,13 +22,13 @@ func Init() (*Service, error) {
 	}
 
 	primary := pihole.NewClient(conf.Primary)
-	var rs []pihole.Client
+	var replicas []pihole.Client
 	for _, replica := range conf.Replicas {
-		rs = append(rs, pihole.NewClient(replica))
+		replicas = append(replicas, pihole.NewClient(replica))
 	}
 
 	return &Service{
-		target: sync.NewTarget(primary, rs),
+		target: sync.NewTarget(primary, replicas),
 		conf:   conf,
 	}, nil
 }

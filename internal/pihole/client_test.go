@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	piHole = e2e.RunPiHole(context.Background(), apiPassword).Container
+	piHole = e2e.RunPiHole(apiPassword).Container
 )
 
 type clientTestSuite struct {

@@ -4,6 +4,7 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/config"
 	syncmock "github.com/lovelaze/nebula-sync/internal/mocks/sync"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -24,7 +25,10 @@ func TestRun_full(t *testing.T) {
 		conf:   conf,
 	}
 
-	service.Run()
+	err := service.Run()
+	require.NoError(t, err)
+
+	target.AssertCalled(t, "FullSync")
 }
 
 func TestRun_manual(t *testing.T) {
@@ -44,5 +48,8 @@ func TestRun_manual(t *testing.T) {
 		conf:   conf,
 	}
 
-	service.Run()
+	err := service.Run()
+	require.NoError(t, err)
+
+	target.AssertCalled(t, "ManualSync", (*config.SyncSettings)(nil))
 }

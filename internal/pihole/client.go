@@ -23,7 +23,7 @@ var (
 func NewClient(piHole model.PiHole) Client {
 	logger := log.With().Str("client", piHole.Url.String()).Logger()
 	return &client{
-		PiHole: piHole,
+		piHole: piHole,
 		logger: &logger,
 	}
 }
@@ -41,7 +41,7 @@ type Client interface {
 }
 
 type client struct {
-	PiHole model.PiHole
+	piHole model.PiHole
 	auth   auth
 	logger *zerolog.Logger
 }
@@ -73,7 +73,7 @@ func (client *client) Authenticate() error {
 	client.logger.Debug().Msg("Authenticate")
 	authResponse := model.AuthResponse{}
 
-	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.PiHole.Password})
+	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.piHole.Password})
 	if err != nil {
 		return err
 	}
@@ -314,11 +314,11 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 }
 
 func (client *client) String() string {
-	return client.PiHole.Url.String()
+	return client.piHole.Url.String()
 }
 
 func (client *client) ApiPath(target string) string {
-	return client.PiHole.Url.JoinPath("api", target).String()
+	return client.piHole.Url.JoinPath("api", target).String()
 }
 
 func successfulHttpStatus(statusCode int) error {

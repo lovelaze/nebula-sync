@@ -45,6 +45,15 @@ func (suite *testSuite) Test_ManualSync() {
 	suite.T().Setenv("SYNC_CONFIG_MISC", "true")
 	suite.T().Setenv("SYNC_CONFIG_DEBUG", "true")
 
+	suite.T().Setenv("SYNC_GRAVITY_DHCP_LEASES", "true")
+	suite.T().Setenv("SYNC_GRAVITY_GROUP", "true")
+	suite.T().Setenv("SYNC_GRAVITY_AD_LIST", "true")
+	suite.T().Setenv("SYNC_GRAVITY_AD_LIST_BY_GROUP", "true")
+	suite.T().Setenv("SYNC_GRAVITY_DOMAIN_LIST", "true")
+	suite.T().Setenv("SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP", "true")
+	suite.T().Setenv("SYNC_GRAVITY_CLIENT", "true")
+	suite.T().Setenv("SYNC_GRAVITY_CLIENT_BY_GROUP", "true")
+
 	s, err := service.Init()
 	require.NoError(suite.T(), err)
 	err = s.Run()

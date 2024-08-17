@@ -80,3 +80,27 @@ func LoadEnvFile(filename string) error {
 	log.Debug().Msgf("Loading env file: %s", filename)
 	return godotenv.Load(filename)
 }
+
+func (c *Config) String() string {
+	replicas := make([]string, len(c.Replicas))
+	for _, replica := range c.Replicas {
+		replicas = append(replicas, replica.Url.String())
+	}
+
+	cron := ""
+	if c.Cron != nil {
+		cron = *c.Cron
+	}
+
+	syncSettings := ""
+	if c.SyncSettings != nil {
+		if mc := c.SyncSettings.Config; mc != nil {
+			syncSettings += fmt.Sprintf("config=%+v", *mc)
+		}
+		if gc := c.SyncSettings.Gravity; gc != nil {
+			syncSettings += fmt.Sprintf(", gravity=%+v", *gc)
+		}
+	}
+
+	return fmt.Sprintf("primary=%s, replicas=%s, fullSync=%t, cron=%s, syncSettings=%s", c.Primary.Url, replicas, c.FullSync, cron, syncSettings)
+}

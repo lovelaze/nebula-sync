@@ -7,6 +7,7 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -49,7 +50,8 @@ func TestTarget_FullSync(t *testing.T) {
 		Times(1).
 		Return(nil)
 
-	target.FullSync()
+	err := target.FullSync()
+	require.NoError(t, err)
 }
 
 func TestTarget_ManualSync(t *testing.T) {
@@ -126,7 +128,8 @@ func TestTarget_ManualSync(t *testing.T) {
 		Times(1).
 		Return(nil)
 
-	target.ManualSync(&settings)
+	err := target.ManualSync(&settings)
+	require.NoError(t, err)
 }
 
 func Test_target_authenticate(t *testing.T) {

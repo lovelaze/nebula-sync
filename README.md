@@ -13,10 +13,15 @@ This project is not a part of the [official Pi-hole project](https://github.com/
 
 ## Installation
 
-### Linux/OSX binary
-Download binary from the [latest release](https://github.com/lovelaze/nebula-sync/releases/latest)
-```bash
 
+### Linux/OSX binary
+Download binary from the [latest release](https://github.com/lovelaze/nebula-sync/releases/latest) or build from source:
+```
+go install github.com/lovelaze/nebula-sync@latest
+```
+
+Run binary:
+```bash
 # run
 nebula-sync run
 

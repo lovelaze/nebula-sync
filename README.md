@@ -1,6 +1,9 @@
 # nebula-sync
 
-[![Go](https://github.com/lovelaze/nebula-sync/actions/workflows/test.yml/badge.svg)](https://github.com/lovelaze/nebula-sync/actions/workflows/test.yml)
+[![Release version](https://img.shields.io/github/v/release/lovelaze/nebula-sync)](https://github.com/lovelaze/nebula-sync/releases/latest)
+[![Tests](https://img.shields.io/github/actions/workflow/status/lovelaze/nebula-sync/test.yml?branch=main&label=tests)](https://github.com/lovelaze/nebula-sync/actions/workflows/test.yml?query=branch%3Amain)
+![Go version](https://img.shields.io/github/go-mod/go-version/lovelaze/nebula-sync)
+[![Docker image size](https://img.shields.io/docker/image-size/lovelaze/nebula-sync/latest)](https://hub.docker.com/r/lovelaze/nebula-sync)
 
 Synchronize Pi-hole v6.x configuration to replicas.
 
@@ -55,6 +58,9 @@ docker run --rm \
   ghcr.io/lovelaze/nebula-sync:latest
 ```
 
+## Examples
+Env and docker-compose examples can be found [here](https://github.com/lovelaze/nebula-sync/tree/main/examples)
+
 ## Configuration
 
 The following environment variables can be specified:
@@ -71,9 +77,10 @@ The following environment variables can be specified:
 
 ### Optional Environment Variables
 
-| Name     | Default | Example       | Description                                    |
-|----------|---------|---------------|------------------------------------------------|
-| `CRON`   | n/a     | `0 * * * *`   | Specifies the cron schedule for synchronization |
+| Name     | Default | Example        | Description                                    |
+|----------|---------|----------------|------------------------------------------------|
+| `CRON`   | n/a     | `0 * * * *`    | Specifies the cron schedule for synchronization|
+| `TZ`     | n/a     | `Europe/London`| Specifies the timezone for logs and cron       |
 
 > **Note:** The following optional settings apply only if `FULL_SYNC=false`. They allow for granular control of synchronization if a full sync is not wanted.
 

@@ -34,7 +34,7 @@ func Init() (*Service, error) {
 }
 
 func (service *Service) Run() error {
-	log.Info().Msgf("Starting nebula-sync v%s", version.Version)
+	log.Info().Msgf("Starting nebula-sync %s", version.Version)
 	log.Debug().Str("config", service.conf.String()).Msgf("Settings")
 
 	if service.conf.Cron == nil {
@@ -72,8 +72,4 @@ func (service *Service) startCron(cmd func()) error {
 
 	cron.Run()
 	return nil
-}
-
-func (service *Service) Target() sync.Target {
-	return service.target
 }

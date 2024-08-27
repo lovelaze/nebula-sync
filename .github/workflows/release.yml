@@ -27,6 +27,13 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
       - name: Extract tag
         id: extract_tag
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
@@ -39,8 +46,12 @@ jobs:
           tags: |
             ghcr.io/lovelaze/nebula-sync:latest
             ghcr.io/lovelaze/nebula-sync:${{ env.TAG }}
+            docker.io/lovelaze/nebula-sync:latest
+            docker.io/lovelaze/nebula-sync:${{ env.TAG }}
           platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
           provenance: false
+          build-args: |
+            VERSION=${{ env.TAG }}
 
   release:
     needs: docker

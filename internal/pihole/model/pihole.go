@@ -34,7 +34,7 @@ func (piHole *PiHole) Decode(value string) error {
 	parsedUrl, err := url.Parse(uri)
 
 	if err != nil {
-		return fmt.Errorf("failed to parse url: %s", err)
+		return fmt.Errorf("parse url: %s", err)
 	}
 
 	*piHole = PiHole{

@@ -42,7 +42,7 @@ func (service *Service) Run() error {
 	} else {
 		return service.startCron(func() {
 			if err := service.doSync(service.target); err != nil {
-				log.Error().Err(err).Msg("sync failed")
+				log.Error().Err(err).Msg("Sync failed")
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func (service *Service) doSync(t sync.Target) (err error) {
 	}
 
 	if err != nil {
-		return fmt.Errorf("sync failed: %w", err)
+		return err
 	}
 
 	log.Info().Msg("Sync complete")
@@ -67,7 +67,7 @@ func (service *Service) startCron(cmd func()) error {
 	cron := cron.New()
 
 	if _, err := cron.AddFunc(*service.conf.Cron, cmd); err != nil {
-		return fmt.Errorf("failed to start cron job: %w", err)
+		return fmt.Errorf("cron job: %w", err)
 	}
 
 	cron.Run()

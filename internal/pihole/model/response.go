@@ -15,36 +15,36 @@ type VersionResponse struct {
 	Version struct {
 		Core struct {
 			Local struct {
-				Branch  string `json:"branch"`
 				Version string `json:"version"`
+				Branch  string `json:"branch"`
 				Hash    string `json:"hash"`
 			} `json:"local"`
 			Remote struct {
-				Version string `json:"version"`
-				Hash    string `json:"hash"`
+				Version interface{} `json:"version"`
+				Hash    string      `json:"hash"`
 			} `json:"remote"`
 		} `json:"core"`
 		Web struct {
 			Local struct {
-				Branch  string `json:"branch"`
 				Version string `json:"version"`
+				Branch  string `json:"branch"`
 				Hash    string `json:"hash"`
 			} `json:"local"`
 			Remote struct {
-				Version string `json:"version"`
-				Hash    string `json:"hash"`
+				Version interface{} `json:"version"`
+				Hash    string      `json:"hash"`
 			} `json:"remote"`
 		} `json:"web"`
 		Ftl struct {
 			Local struct {
+				Hash    string `json:"hash"`
 				Branch  string `json:"branch"`
 				Version string `json:"version"`
-				Hash    string `json:"hash"`
 				Date    string `json:"date"`
 			} `json:"local"`
 			Remote struct {
-				Version string `json:"version"`
-				Hash    string `json:"hash"`
+				Version interface{} `json:"version"`
+				Hash    string      `json:"hash"`
 			} `json:"remote"`
 		} `json:"ftl"`
 		Docker struct {

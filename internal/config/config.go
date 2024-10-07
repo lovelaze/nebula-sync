@@ -46,7 +46,7 @@ type SyncSettings struct {
 
 func (c *Config) Load() error {
 	if err := envconfig.Process("", c); err != nil {
-		return fmt.Errorf("failed to process env vars: %w", err)
+		return fmt.Errorf("env vars: %w", err)
 	}
 
 	if !c.FullSync {
@@ -60,12 +60,12 @@ func (c *Config) Load() error {
 func (c *Config) loadSyncSettings() error {
 	manualGravity := ManualGravity{}
 	if err := envconfig.Process("", &manualGravity); err != nil {
-		return fmt.Errorf("failed to process gravity env vars: %w", err)
+		return fmt.Errorf("gravity env vars: %w", err)
 	}
 
 	manualConfig := ManualConfig{}
 	if err := envconfig.Process("", &manualConfig); err != nil {
-		return fmt.Errorf("failed to process config env vars: %w", err)
+		return fmt.Errorf("config env vars: %w", err)
 	}
 
 	c.SyncSettings = &SyncSettings{

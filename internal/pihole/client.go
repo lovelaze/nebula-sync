@@ -75,13 +75,13 @@ func (client *client) Authenticate() error {
 
 	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.piHole.Password})
 	if err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("POST", client.ApiPath("/auth"), bytes.NewReader(reqBytes))
 
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -89,20 +89,20 @@ func (client *client) Authenticate() error {
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	if err = json.Unmarshal(body, &authResponse); err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	client.auth = auth{
@@ -118,12 +118,12 @@ func (client *client) Authenticate() error {
 func (client *client) DeleteSession() error {
 	client.logger.Debug().Msg("Delete session")
 	if err := client.auth.verify(); err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("DELETE", client.ApiPath("auth"), nil)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	req.Header.Set("sid", client.auth.sid)
@@ -132,79 +132,79 @@ func (client *client) DeleteSession() error {
 	response, err := httpClient.Do(req)
 
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
-	return err
+	return client.wrapError(err, req)
 }
 
 func (client *client) GetVersion() (*model.VersionResponse, error) {
 	client.logger.Debug().Msg("Get version")
 	versionResponse := model.VersionResponse{}
 	if err := client.auth.verify(); err != nil {
-		return &versionResponse, err
+		return &versionResponse, client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("GET", client.ApiPath("info/version"), nil)
 	if err != nil {
-		return &versionResponse, err
+		return &versionResponse, client.wrapError(err, req)
 	}
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return &versionResponse, err
+		return &versionResponse, client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return &versionResponse, err
+		return &versionResponse, client.wrapError(err, req)
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return &versionResponse, err
+		return &versionResponse, client.wrapError(err, req)
 	}
 
 	err = json.Unmarshal(body, &versionResponse)
 
-	return &versionResponse, err
+	return &versionResponse, client.wrapError(err, req)
 }
 
 func (client *client) GetTeleporter() ([]byte, error) {
 	client.logger.Debug().Msg("Get teleporter")
 	if err := client.auth.verify(); err != nil {
-		return nil, err
+		return nil, client.wrapError(err, nil)
 	}
 	req, err := http.NewRequest("GET", client.ApiPath("teleporter"), nil)
 	if err != nil {
-		return nil, err
+		return nil, client.wrapError(err, req)
 	}
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return nil, err
+		return nil, client.wrapError(err, req)
 	}
 
 	body, err := io.ReadAll(response.Body)
-	return body, err
+	return body, client.wrapError(err, req)
 }
 
 func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error {
 	client.logger.Debug().Any("payload", teleporterRequest).Msg("Post teleporter")
 
 	if err := client.auth.verify(); err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	var requestBody bytes.Buffer
@@ -212,26 +212,26 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 
 	fileWriter, _ := writer.CreateFormFile("file", "config.zip")
 	if _, err := io.Copy(fileWriter, bytes.NewReader(payload)); err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	if teleporterRequest != nil {
 		jsonData, err := json.Marshal(teleporterRequest)
 		if err != nil {
-			return err
+			return client.wrapError(err, nil)
 		}
 		if err = writer.WriteField("import", string(jsonData)); err != nil {
-			return err
+			return client.wrapError(err, nil)
 		}
 	}
 
 	if err := writer.Close(); err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("POST", client.ApiPath("teleporter"), &requestBody)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -239,11 +239,11 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	return nil
@@ -252,65 +252,65 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 func (client *client) GetConfig() (configResponse *model.ConfigResponse, err error) {
 	client.logger.Debug().Msg("Get config")
 	if err := client.auth.verify(); err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("GET", client.ApiPath("config"), nil)
 	if err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, req)
 	}
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, req)
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, req)
 	}
 
 	if err := json.Unmarshal(body, &configResponse); err != nil {
-		return configResponse, err
+		return configResponse, client.wrapError(err, req)
 	}
 
-	return configResponse, err
+	return configResponse, client.wrapError(err, req)
 }
 
 func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error {
 	client.logger.Debug().Any("payload", patchRequest).Msgf("Patch config")
 	if err := client.auth.verify(); err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	reqBytes, err := json.Marshal(patchRequest)
 	if err != nil {
-		return err
+		return client.wrapError(err, nil)
 	}
 
 	req, err := http.NewRequest("PATCH", client.ApiPath("config"), bytes.NewReader(reqBytes))
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := httpClient.Do(req)
 	if err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
 	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return err
+		return client.wrapError(err, req)
 	}
 
-	return err
+	return client.wrapError(err, req)
 }
 
 func (client *client) String() string {
@@ -319,6 +319,16 @@ func (client *client) String() string {
 
 func (client *client) ApiPath(target string) string {
 	return client.piHole.Url.JoinPath("api", target).String()
+}
+
+func (client *client) wrapError(err error, req *http.Request) error {
+	if err != nil {
+		if req != nil {
+			return fmt.Errorf("%s: %w", req.URL.String(), err)
+		}
+		return fmt.Errorf("%s: %w", client.String(), err)
+	}
+	return nil
 }
 
 func successfulHttpStatus(statusCode int) error {

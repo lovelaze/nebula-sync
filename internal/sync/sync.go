@@ -28,15 +28,15 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 func (target *target) FullSync() error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running full sync")
 	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authentication failed: %w", err)
+		return fmt.Errorf("authenticate: %w", err)
 	}
 
 	if err := target.syncTeleporters(nil); err != nil {
-		return fmt.Errorf("sync Teleporters failed: %w", err)
+		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
 	if err := target.deleteSessions(); err != nil {
-		return fmt.Errorf("delete sessions failed: %w", err)
+		return fmt.Errorf("delete sessions: %w", err)
 	}
 
 	return nil
@@ -46,19 +46,19 @@ func (target *target) ManualSync(syncSettings *config.SyncSettings) error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running manual sync")
 
 	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authentication failed: %w", err)
+		return fmt.Errorf("authentication: %w", err)
 	}
 
 	if err := target.syncTeleporters(syncSettings.Gravity); err != nil {
-		return fmt.Errorf("sync Teleporters failed: %w", err)
+		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
 	if err := target.syncConfigs(syncSettings.Config); err != nil {
-		return fmt.Errorf("sync configs failed: %w", err)
+		return fmt.Errorf("sync configs: %w", err)
 	}
 
 	if err := target.deleteSessions(); err != nil {
-		return fmt.Errorf("delete sessions failed: %w", err)
+		return fmt.Errorf("delete sessions: %w", err)
 	}
 
 	return nil

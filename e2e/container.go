@@ -32,11 +32,14 @@ func (c *PiHoleContainer) EnvString() string {
 }
 
 func RunPiHole(password string) *PiHoleContainer {
+	logStrategy := wait.ForLog("listening on")
+	portStrategy := wait.ForListeningPort("80").WithStartupTimeout(30 * time.Second)
+
 	containerReq := tc.GenericContainerRequest{
 		ContainerRequest: tc.ContainerRequest{
-			Image:        "pihole/pihole:development-v6",
+			Image:        "pihole/pihole:development",
 			ExposedPorts: []string{"80/tcp"},
-			WaitingFor:   wait.ForListeningPort("80").WithStartupTimeout(10 * time.Second),
+			WaitingFor:   wait.ForAll(portStrategy, logStrategy),
 			Env: map[string]string{
 				"FTLCONF_webserver_api_password": password,
 			},

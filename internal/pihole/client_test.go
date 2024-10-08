@@ -132,14 +132,7 @@ func Test_auth_verify(t *testing.T) {
 	assert.Error(t, a.verify())
 
 	a.valid = true
-	assert.Error(t, a.verify())
-
-	a.sid = "sid123"
-	assert.Error(t, a.verify())
-
-	a.validity = 1
 	assert.NoError(t, a.verify())
-
 }
 
 func createClient(container tc.Container) Client {

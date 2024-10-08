@@ -58,14 +58,6 @@ func (a *auth) verify() error {
 		return errors.New("invalid sid found")
 	}
 
-	if a.sid == "" {
-		return errors.New("no sid found")
-	}
-
-	if a.validity <= 0 {
-		return errors.New("expired sid found")
-	}
-
 	return nil
 }
 
@@ -119,6 +111,10 @@ func (client *client) DeleteSession() error {
 	client.logger.Debug().Msg("Delete session")
 	if err := client.auth.verify(); err != nil {
 		return client.wrapError(err, nil)
+	}
+
+	if client.auth.sid == "" {
+		return nil
 	}
 
 	req, err := http.NewRequest("DELETE", client.ApiPath("auth"), nil)

@@ -37,7 +37,7 @@ func RunPiHole(password string) *PiHoleContainer {
 
 	containerReq := tc.GenericContainerRequest{
 		ContainerRequest: tc.ContainerRequest{
-			Image:        "pihole/pihole:development",
+			Image:        "pihole/pihole:latest",
 			ExposedPorts: []string{"80/tcp"},
 			WaitingFor:   wait.ForAll(portStrategy, logStrategy),
 			Env: map[string]string{

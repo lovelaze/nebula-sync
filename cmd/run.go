@@ -21,7 +21,7 @@ var runCmd = &cobra.Command{
 		}
 
 		if err = service.Run(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to run service")
+			log.Fatal().Err(err).Msg("Sync failed")
 		}
 	},
 }

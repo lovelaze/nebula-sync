@@ -37,15 +37,19 @@ func (service *Service) Run() error {
 	log.Info().Msgf("Starting nebula-sync %s", version.Version)
 	log.Debug().Str("config", service.conf.String()).Msgf("Settings")
 
-	if service.conf.Cron == nil {
-		return service.doSync(service.target)
-	} else {
+	if err := service.doSync(service.target); err != nil {
+		return err
+	}
+
+	if service.conf.Cron != nil {
 		return service.startCron(func() {
 			if err := service.doSync(service.target); err != nil {
 				log.Error().Err(err).Msg("Sync failed")
 			}
 		})
 	}
+
+	return nil
 }
 
 func (service *Service) doSync(t sync.Target) (err error) {

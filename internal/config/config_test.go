@@ -73,16 +73,30 @@ func TestConfig_loadSyncSettings(t *testing.T) {
 	assert.True(t, conf.SyncSettings.Gravity.ClientByGroup)
 }
 
+func TestConfig_LoadClientSettings(t *testing.T) {
+	conf := Config{}
+
+	t.Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
+
+	err := conf.loadClientSettings()
+	require.NoError(t, err)
+
+	assert.Equal(t, true, conf.ClientSettings.SkipSSLVerification)
+}
+
 func TestConfig_LoadEnvFile(t *testing.T) {
 	os.Clearenv()
 	err := LoadEnvFile("../../testdata/.env")
 
 	require.NoError(t, err)
 
-	assert.Equal(t, "http://ph1.example.com|password", os.Getenv("PRIMARY"))
-	assert.Equal(t, "http://ph2.example.com|password", os.Getenv("REPLICAS"))
+	assert.Equal(t, "https://ph1.example.com|password", os.Getenv("PRIMARY"))
+	assert.Equal(t, "https://ph2.example.com|password", os.Getenv("REPLICAS"))
 	assert.Equal(t, "false", os.Getenv("FULL_SYNC"))
 	assert.Equal(t, "* * * * *", os.Getenv("CRON"))
+	assert.Equal(t, "Europe/London", os.Getenv("TZ"))
+
+	assert.Equal(t, "true", os.Getenv("CLIENT_SKIP_TLS_VERIFICATION"))
 
 	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DNS"))
 	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DHCP"))

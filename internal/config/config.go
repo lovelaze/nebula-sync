@@ -1,19 +1,36 @@
 package config
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/rs/zerolog/log"
+	"net/http"
+	"time"
 )
 
 type Config struct {
-	Primary      model.PiHole   `required:"true" envconfig:"PRIMARY"`
-	Replicas     []model.PiHole `required:"true" envconfig:"REPLICAS"`
-	FullSync     bool           `required:"true" envconfig:"FULL_SYNC"`
-	Cron         *string        `envconfig:"CRON"`
-	SyncSettings *SyncSettings  `ignored:"true"`
+	Primary        model.PiHole    `required:"true" envconfig:"PRIMARY"`
+	Replicas       []model.PiHole  `required:"true" envconfig:"REPLICAS"`
+	FullSync       bool            `required:"true" envconfig:"FULL_SYNC"`
+	Cron           *string         `envconfig:"CRON"`
+	ClientSettings *ClientSettings `ignored:"true"`
+	SyncSettings   *SyncSettings   `ignored:"true"`
+}
+
+type ClientSettings struct {
+	SkipSSLVerification bool `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
+}
+
+func (cs *ClientSettings) NewHttpClient() *http.Client {
+	return &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: cs.SkipSSLVerification},
+		},
+	}
 }
 
 type ManualGravity struct {
@@ -49,11 +66,27 @@ func (c *Config) Load() error {
 		return fmt.Errorf("env vars: %w", err)
 	}
 
+	if err := c.loadClientSettings(); err != nil {
+		return err
+	}
+
 	if !c.FullSync {
 		if err := c.loadSyncSettings(); err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func (c *Config) loadClientSettings() error {
+	clientSettings := ClientSettings{}
+
+	if err := envconfig.Process("", &clientSettings); err != nil {
+		return fmt.Errorf("client env vars: %w", err)
+	}
+
+	c.ClientSettings = &clientSettings
+
 	return nil
 }
 

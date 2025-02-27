@@ -12,19 +12,18 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"time"
 )
 
 var (
-	userAgent  = fmt.Sprintf("nebula-sync/%s", version.Version)
-	httpClient = &http.Client{Timeout: 5 * time.Second}
+	userAgent = fmt.Sprintf("nebula-sync/%s", version.Version)
 )
 
-func NewClient(piHole model.PiHole) Client {
+func NewClient(piHole model.PiHole, httpClient *http.Client) Client {
 	logger := log.With().Str("client", piHole.Url.String()).Logger()
 	return &client{
-		piHole: piHole,
-		logger: &logger,
+		piHole:     piHole,
+		logger:     &logger,
+		httpClient: httpClient,
 	}
 }
 
@@ -41,9 +40,10 @@ type Client interface {
 }
 
 type client struct {
-	piHole model.PiHole
-	auth   auth
-	logger *zerolog.Logger
+	piHole     model.PiHole
+	auth       auth
+	logger     *zerolog.Logger
+	httpClient *http.Client
 }
 
 type auth struct {
@@ -79,7 +79,7 @@ func (client *client) Authenticate() error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
@@ -125,7 +125,7 @@ func (client *client) DeleteSession() error {
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 
 	if err != nil {
 		return client.wrapError(err, req)
@@ -152,7 +152,7 @@ func (client *client) GetVersion() (*model.VersionResponse, error) {
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return &versionResponse, client.wrapError(err, req)
 	}
@@ -183,7 +183,7 @@ func (client *client) GetTeleporter() ([]byte, error) {
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, client.wrapError(err, req)
 	}
@@ -233,7 +233,7 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
@@ -258,7 +258,7 @@ func (client *client) GetConfig() (configResponse *model.ConfigResponse, err err
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return configResponse, client.wrapError(err, req)
 	}
@@ -297,7 +297,7 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 	req.Header.Set("sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
-	response, err := httpClient.Do(req)
+	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return client.wrapError(err, req)
 	}

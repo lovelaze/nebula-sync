@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tc "github.com/testcontainers/testcontainers-go"
+	"net/http"
 	"testing"
 )
 
@@ -17,7 +18,8 @@ const (
 )
 
 var (
-	piHole = e2e.RunPiHole(apiPassword).Container
+	piHole     = e2e.RunPiHole(apiPassword).Container
+	httpClient = http.DefaultClient
 )
 
 type clientTestSuite struct {
@@ -106,14 +108,14 @@ func (suite *clientTestSuite) TestClient_PatchConfig() {
 
 func TestClient_String(t *testing.T) {
 	piHole := model.NewPiHole("http://asdfasdf.com:1234", apiPassword)
-	s := NewClient(piHole).String()
+	s := NewClient(piHole, httpClient).String()
 
 	assert.Equal(t, "http://asdfasdf.com:1234", s)
 }
 
 func TestClient_ApiPath(t *testing.T) {
 	piHole := model.NewPiHole("http://asdfasdf.com:1234", apiPassword)
-	c := NewClient(piHole)
+	c := NewClient(piHole, httpClient)
 
 	url := c.String()
 	path := c.ApiPath("testing")
@@ -143,5 +145,5 @@ func createClient(container tc.Container) Client {
 
 	host := fmt.Sprintf("http://localhost:%s", apiPort.Port())
 
-	return NewClient(model.NewPiHole(host, apiPassword))
+	return NewClient(model.NewPiHole(host, apiPassword), httpClient)
 }

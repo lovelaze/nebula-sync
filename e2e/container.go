@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"github.com/docker/go-connections/nat"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"time"
@@ -13,8 +14,19 @@ type PiHoleContainer struct {
 	password  string
 }
 
-func (c *PiHoleContainer) ConnectionString() string {
-	mappedPort, err := c.Container.MappedPort(context.Background(), "80/tcp")
+func (c *PiHoleContainer) ConnectionString(ssl bool) string {
+	var protocol string
+	var port string
+
+	if ssl {
+		protocol = "https"
+		port = "443/tcp"
+	} else {
+		protocol = "http"
+		port = "80/tcp"
+	}
+
+	mappedPort, err := c.Container.MappedPort(context.Background(), nat.Port(port))
 	if err != nil {
 		panic(err)
 	}
@@ -24,11 +36,11 @@ func (c *PiHoleContainer) ConnectionString() string {
 		panic(err)
 	}
 
-	return fmt.Sprintf("http://%s:%s", hostIP, mappedPort.Port())
+	return fmt.Sprintf("%s://%s:%s", protocol, hostIP, mappedPort.Port())
 }
 
-func (c *PiHoleContainer) EnvString() string {
-	return fmt.Sprintf("%s|%s", c.ConnectionString(), c.password)
+func (c *PiHoleContainer) EnvString(ssl bool) string {
+	return fmt.Sprintf("%s|%s", c.ConnectionString(ssl), c.password)
 }
 
 func RunPiHole(password string) *PiHoleContainer {
@@ -38,7 +50,7 @@ func RunPiHole(password string) *PiHoleContainer {
 	containerReq := tc.GenericContainerRequest{
 		ContainerRequest: tc.ContainerRequest{
 			Image:        "pihole/pihole:latest",
-			ExposedPorts: []string{"80/tcp"},
+			ExposedPorts: []string{"80/tcp", "443/tcp"},
 			WaitingFor:   wait.ForAll(portStrategy, logStrategy),
 			Env: map[string]string{
 				"FTLCONF_webserver_api_password": password,

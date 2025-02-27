@@ -23,8 +23,8 @@ func TestE2E(t *testing.T) {
 }
 
 func (suite *testSuite) Test_FullSync() {
-	suite.T().Setenv("PRIMARY", suite.ph1.EnvString())
-	suite.T().Setenv("REPLICAS", suite.ph2.EnvString())
+	suite.T().Setenv("PRIMARY", suite.ph1.EnvString(false))
+	suite.T().Setenv("REPLICAS", suite.ph2.EnvString(false))
 	suite.T().Setenv("FULL_SYNC", "true")
 
 	s, err := service.Init()
@@ -33,9 +33,21 @@ func (suite *testSuite) Test_FullSync() {
 	require.NoError(suite.T(), err)
 }
 
+func (suite *testSuite) Test_FullSync_SSL() {
+	suite.T().Setenv("PRIMARY", suite.ph1.EnvString(true))
+	suite.T().Setenv("REPLICAS", suite.ph2.EnvString(true))
+	suite.T().Setenv("FULL_SYNC", "true")
+	suite.T().Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
+
+	s, err := service.Init()
+	require.NoError(suite.T(), err)
+	err = s.Run()
+	require.NoError(suite.T(), err)
+}
+
 func (suite *testSuite) Test_ManualSync() {
-	suite.T().Setenv("PRIMARY", suite.ph1.EnvString())
-	suite.T().Setenv("REPLICAS", suite.ph2.EnvString())
+	suite.T().Setenv("PRIMARY", suite.ph1.EnvString(false))
+	suite.T().Setenv("REPLICAS", suite.ph2.EnvString(false))
 	suite.T().Setenv("FULL_SYNC", "false")
 	suite.T().Setenv("SYNC_CONFIG_DNS", "true")
 	suite.T().Setenv("SYNC_CONFIG_DHCP", "true")

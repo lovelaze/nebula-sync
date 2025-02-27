@@ -21,10 +21,12 @@ func Init() (*Service, error) {
 		return nil, err
 	}
 
-	primary := pihole.NewClient(conf.Primary)
+	httpClient := conf.ClientSettings.NewHttpClient()
+
+	primary := pihole.NewClient(conf.Primary, httpClient)
 	var replicas []pihole.Client
 	for _, replica := range conf.Replicas {
-		replicas = append(replicas, pihole.NewClient(replica))
+		replicas = append(replicas, pihole.NewClient(replica, httpClient))
 	}
 
 	return &Service{

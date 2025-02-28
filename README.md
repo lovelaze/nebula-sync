@@ -77,10 +77,11 @@ The following environment variables can be specified:
 
 ### Optional Environment Variables
 
-| Name     | Default | Example        | Description                                    |
-|----------|---------|----------------|------------------------------------------------|
-| `CRON`   | n/a     | `0 * * * *`    | Specifies the cron schedule for synchronization|
-| `TZ`     | n/a     | `Europe/London`| Specifies the timezone for logs and cron       |
+| Name                               | Default | Example         | Description                                        |
+|------------------------------------|---------|-----------------|----------------------------------------------------|
+| `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
+| `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
+| `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips SSL certificate verification                 |
 
 > **Note:** The following optional settings apply only if `FULL_SYNC=false`. They allow for granular control of synchronization if a full sync is not wanted.
 

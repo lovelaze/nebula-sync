@@ -6,7 +6,9 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w
+      - -s
+      - -w
+      - -X github.com/lovelaze/nebula-sync/version.Version={{ .Tag }}
     goos:
       - linux
       - windows
@@ -36,10 +38,10 @@ upx:
     brute: true
 
 archives:
-  - format: tar.gz
+  - formats: ['tar.gz']
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
 
 checksum:
   name_template: 'checksums.txt'

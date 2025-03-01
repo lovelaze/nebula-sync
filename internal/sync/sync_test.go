@@ -19,12 +19,12 @@ func TestTarget_FullSync(t *testing.T) {
 
 	primary.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 	replica.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 
@@ -86,12 +86,12 @@ func TestTarget_ManualSync(t *testing.T) {
 
 	primary.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 	replica.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 
@@ -143,12 +143,12 @@ func Test_target_authenticate(t *testing.T) {
 
 	primary.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 	replica.
 		EXPECT().
-		Authenticate().
+		PostAuth().
 		Times(1).
 		Return(nil)
 

@@ -27,6 +27,7 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 
 func (target *target) FullSync() error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running full sync")
+
 	if err := target.authenticate(); err != nil {
 		return fmt.Errorf("authenticate: %w", err)
 	}
@@ -66,12 +67,12 @@ func (target *target) ManualSync(syncSettings *config.SyncSettings) error {
 
 func (target *target) authenticate() (err error) {
 	log.Info().Msg("Authenticating clients...")
-	if err := target.Primary.Authenticate(); err != nil {
+	if err := target.Primary.PostAuth(); err != nil {
 		return err
 	}
 
 	for _, replica := range target.Replicas {
-		if err := replica.Authenticate(); err != nil {
+		if err := replica.PostAuth(); err != nil {
 			return err
 		}
 	}
@@ -107,7 +108,9 @@ func (target *target) syncTeleporters(manualGravity *config.ManualGravity) error
 	}
 
 	for _, replica := range target.Replicas {
-		if err := replica.PostTeleporter(conf, teleporterRequest); err != nil {
+		if err := withRetry(func() error {
+			return replica.PostTeleporter(conf, teleporterRequest)
+		}); err != nil {
 			return err
 		}
 	}
@@ -125,7 +128,9 @@ func (target *target) syncConfigs(manualConfig *config.ManualConfig) error {
 	configRequest := createPatchConfigRequest(manualConfig, configResponse)
 
 	for _, replica := range target.Replicas {
-		if err := replica.PatchConfig(configRequest); err != nil {
+		if err := withRetry(func() error {
+			return replica.PatchConfig(configRequest)
+		}); err != nil {
 			return err
 		}
 	}

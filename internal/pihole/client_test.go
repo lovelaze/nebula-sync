@@ -29,7 +29,7 @@ type clientTestSuite struct {
 
 func (suite *clientTestSuite) SetupTest() {
 	client := createClient(piHole)
-	err := client.Authenticate()
+	err := client.PostAuth()
 	require.NoError(suite.T(), err)
 	suite.client = client
 }
@@ -39,7 +39,7 @@ func TestClientIntegration(t *testing.T) {
 }
 
 func (suite *clientTestSuite) TestClient_Authenticate() {
-	err := suite.client.Authenticate()
+	err := suite.client.PostAuth()
 
 	assert.NoError(suite.T(), err)
 }

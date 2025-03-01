@@ -28,7 +28,7 @@ func NewClient(piHole model.PiHole, httpClient *http.Client) Client {
 }
 
 type Client interface {
-	Authenticate() error
+	PostAuth() error
 	DeleteSession() error
 	GetVersion() (*model.VersionResponse, error)
 	GetTeleporter() ([]byte, error)
@@ -61,8 +61,8 @@ func (a *auth) verify() error {
 	return nil
 }
 
-func (client *client) Authenticate() error {
-	client.logger.Debug().Msg("Authenticate")
+func (client *client) PostAuth() error {
+	client.logger.Debug().Msg("PostAuth")
 	authResponse := model.AuthResponse{}
 
 	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.piHole.Password})

@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
@@ -25,58 +24,6 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 	}
 }
 
-func (target *target) FullSync(syncConf *config.Sync) error {
-	log.Info().Int("replicas", len(target.Replicas)).Msg("Running full sync")
-
-	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authenticate: %w", err)
-	}
-
-	if err := target.syncTeleporters(nil); err != nil {
-		return fmt.Errorf("sync teleporters: %w", err)
-	}
-
-	if syncConf.RunGravity {
-		if err := target.runGravity(); err != nil {
-			return fmt.Errorf("run gravity: %w", err)
-		}
-	}
-
-	if err := target.deleteSessions(); err != nil {
-		return fmt.Errorf("delete sessions: %w", err)
-	}
-
-	return nil
-}
-
-func (target *target) ManualSync(syncConf *config.Sync) error {
-	log.Info().Int("replicas", len(target.Replicas)).Msg("Running manual sync")
-
-	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authentication: %w", err)
-	}
-
-	if err := target.syncTeleporters(syncConf.GravitySettings); err != nil {
-		return fmt.Errorf("sync teleporters: %w", err)
-	}
-
-	if err := target.syncConfigs(syncConf.ConfigSettings); err != nil {
-		return fmt.Errorf("sync configs: %w", err)
-	}
-
-	if syncConf.RunGravity {
-		if err := target.runGravity(); err != nil {
-			return fmt.Errorf("run gravity: %w", err)
-		}
-	}
-
-	if err := target.deleteSessions(); err != nil {
-		return fmt.Errorf("delete sessions: %w", err)
-	}
-
-	return nil
-}
-
 func (target *target) authenticate() (err error) {
 	log.Info().Msg("Authenticating clients...")
 	if err := target.Primary.PostAuth(); err != nil {
@@ -84,7 +31,9 @@ func (target *target) authenticate() (err error) {
 	}
 
 	for _, replica := range target.Replicas {
-		if err := replica.PostAuth(); err != nil {
+		if err := withRetry(func() error {
+			return replica.PostAuth()
+		}, AttemptsPostAuth); err != nil {
 			return err
 		}
 	}
@@ -99,7 +48,9 @@ func (target *target) deleteSessions() (err error) {
 	}
 
 	for _, replica := range target.Replicas {
-		if err := replica.DeleteSession(); err != nil {
+		if err := withRetry(func() error {
+			return replica.DeleteSession()
+		}, AttemptsDeleteSession); err != nil {
 			return err
 		}
 	}
@@ -122,7 +73,7 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PostTeleporter(conf, teleporterRequest)
-		}); err != nil {
+		}, AttemptsPostTeleporter); err != nil {
 			return err
 		}
 	}
@@ -142,7 +93,7 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PatchConfig(configRequest)
-		}); err != nil {
+		}, AttemptsPatchConfig); err != nil {
 			return err
 		}
 	}
@@ -161,7 +112,7 @@ func (target *target) runGravity() error {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PostRunGravity()
-		}); err != nil {
+		}, AttemptsPostRunGravity); err != nil {
 			return err
 		}
 	}
@@ -173,7 +124,9 @@ func createPatchConfigRequest(config *config.ConfigSettings, configResponse *mod
 	patchConfig := model.PatchConfig{}
 
 	if config.DNS {
-		patchConfig.DNS = configResponse.Config["dns"].(map[string]interface{})
+		i := configResponse.Config["dns"]
+		m := i.(map[string]interface{})
+		patchConfig.DNS = m
 	}
 	if config.DHCP {
 		patchConfig.DHCP = configResponse.Config["dhcp"].(map[string]interface{})

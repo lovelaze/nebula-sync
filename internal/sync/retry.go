@@ -8,11 +8,15 @@ import (
 )
 
 const (
-	attempts uint          = 5
-	delay    time.Duration = 1 * time.Second
+	delay                  = 1 * time.Second
+	AttemptsPostTeleporter = 5
+	AttemptsPatchConfig    = 5
+	AttemptsPostRunGravity = 5
+	AttemptsPostAuth       = 3
+	AttemptsDeleteSession  = 3
 )
 
-func withRetry(retryFunc func() error) error {
+func withRetry(retryFunc func() error, attempts uint) error {
 	return retry.Do(
 		func() error {
 			return retryFunc()

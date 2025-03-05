@@ -66,12 +66,12 @@ func (_c *Target_FullSync_Call) RunAndReturn(run func(*config.Sync) error) *Targ
 	return _c
 }
 
-// ManualSync provides a mock function with given fields: _a0
-func (_m *Target) ManualSync(_a0 *config.Sync) error {
+// SelectiveSync provides a mock function with given fields: _a0
+func (_m *Target) SelectiveSync(_a0 *config.Sync) error {
 	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ManualSync")
+		panic("no return value specified for SelectiveSync")
 	}
 
 	var r0 error
@@ -84,30 +84,30 @@ func (_m *Target) ManualSync(_a0 *config.Sync) error {
 	return r0
 }
 
-// Target_ManualSync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ManualSync'
-type Target_ManualSync_Call struct {
+// Target_SelectiveSync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SelectiveSync'
+type Target_SelectiveSync_Call struct {
 	*mock.Call
 }
 
-// ManualSync is a helper method to define mock.On call
+// SelectiveSync is a helper method to define mock.On call
 //   - _a0 *config.Sync
-func (_e *Target_Expecter) ManualSync(_a0 interface{}) *Target_ManualSync_Call {
-	return &Target_ManualSync_Call{Call: _e.mock.On("ManualSync", _a0)}
+func (_e *Target_Expecter) SelectiveSync(_a0 interface{}) *Target_SelectiveSync_Call {
+	return &Target_SelectiveSync_Call{Call: _e.mock.On("SelectiveSync", _a0)}
 }
 
-func (_c *Target_ManualSync_Call) Run(run func(_a0 *config.Sync)) *Target_ManualSync_Call {
+func (_c *Target_SelectiveSync_Call) Run(run func(_a0 *config.Sync)) *Target_SelectiveSync_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(*config.Sync))
 	})
 	return _c
 }
 
-func (_c *Target_ManualSync_Call) Return(_a0 error) *Target_ManualSync_Call {
+func (_c *Target_SelectiveSync_Call) Return(_a0 error) *Target_SelectiveSync_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *Target_ManualSync_Call) RunAndReturn(run func(*config.Sync) error) *Target_ManualSync_Call {
+func (_c *Target_SelectiveSync_Call) RunAndReturn(run func(*config.Sync) error) *Target_SelectiveSync_Call {
 	_c.Call.Return(run)
 	return _c
 }

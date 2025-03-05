@@ -47,7 +47,7 @@ func (suite *testSuite) Test_FullSync_SSL() {
 	require.NoError(suite.T(), err)
 }
 
-func (suite *testSuite) Test_ManualSync() {
+func (suite *testSuite) Test_SelectiveSync() {
 	suite.T().Setenv("PRIMARY", suite.ph1.EnvString(false))
 	suite.T().Setenv("REPLICAS", suite.ph2.EnvString(false))
 	suite.T().Setenv("FULL_SYNC", "false")

@@ -32,7 +32,7 @@ func TestRun_full(t *testing.T) {
 	target.AssertCalled(t, "FullSync", conf.Sync)
 }
 
-func TestRun_manual(t *testing.T) {
+func TestRun_selective(t *testing.T) {
 	conf := config.Config{
 		Primary:  model.PiHole{},
 		Replicas: []model.PiHole{},
@@ -43,7 +43,7 @@ func TestRun_manual(t *testing.T) {
 	}
 
 	target := syncmock.NewTarget(t)
-	target.On("ManualSync", conf.Sync).Return(nil)
+	target.On("SelectiveSync", conf.Sync).Return(nil)
 
 	service := Service{
 		target: target,
@@ -53,5 +53,5 @@ func TestRun_manual(t *testing.T) {
 	err := service.Run()
 	require.NoError(t, err)
 
-	target.AssertCalled(t, "ManualSync", conf.Sync)
+	target.AssertCalled(t, "SelectiveSync", conf.Sync)
 }

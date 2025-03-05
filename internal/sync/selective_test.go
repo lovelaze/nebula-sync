@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestTarget_ManualSync(t *testing.T) {
+func TestTarget_SelectiveSync(t *testing.T) {
 	primary := piholemock.NewClient(t)
 	replica := piholemock.NewClient(t)
 
@@ -56,6 +56,6 @@ func TestTarget_ManualSync(t *testing.T) {
 	primary.EXPECT().DeleteSession().Once().Return(nil)
 	replica.EXPECT().DeleteSession().Once().Return(nil)
 
-	err := target.ManualSync(&settings)
+	err := target.SelectiveSync(&settings)
 	require.NoError(t, err)
 }

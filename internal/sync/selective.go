@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func (target *target) ManualSync(syncConf *config.Sync) error {
+func (target *target) SelectiveSync(syncConf *config.Sync) error {
 	log.Info().Str("mode", "selective").Int("replicas", len(target.Replicas)).Msg("Running sync")
 
 	if err := target.authenticate(); err != nil {

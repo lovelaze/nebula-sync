@@ -58,7 +58,7 @@ func (service *Service) doSync(t sync.Target) (err error) {
 	if service.conf.Sync.FullSync {
 		err = t.FullSync(service.conf.Sync)
 	} else {
-		err = t.ManualSync(service.conf.Sync)
+		err = t.SelectiveSync(service.conf.Sync)
 	}
 
 	if err != nil {

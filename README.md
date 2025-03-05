@@ -11,7 +11,7 @@ This project is not a part of the [official Pi-hole project](https://github.com/
 
 ## Features
 - **Full sync**: Use Pi-hole Teleporter for full synchronization.
-- **Manual sync**: Selective feature synchronization.
+- **Selective sync**: Selective feature synchronization.
 - **Cron schedule**: Run on chron schedule.
 
 ## Installation

@@ -9,7 +9,7 @@ import (
 
 type Target interface {
 	FullSync(sync *config.Sync) error
-	ManualSync(sync *config.Sync) error
+	SelectiveSync(sync *config.Sync) error
 }
 
 type target struct {

@@ -44,6 +44,7 @@ services:
     - PRIMARY=http://ph1.example.com|password
     - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
     - FULL_SYNC=true
+    - RUN_GRAVITY=true
     - CRON=0 * * * *
 ```
 
@@ -55,6 +56,7 @@ docker run --rm \
   -e PRIMARY="http://ph1.example.com|password" \
   -e REPLICAS="http://ph2.example.com|password" \
   -e FULL_SYNC=true \
+  -e RUN_GRAVITY=true \
   ghcr.io/lovelaze/nebula-sync:latest
 ```
 
@@ -80,6 +82,7 @@ The following environment variables can be specified:
 | Name                               | Default | Example         | Description                                        |
 |------------------------------------|---------|-----------------|----------------------------------------------------|
 | `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
+| `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
 | `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips SSL certificate verification                 |
 

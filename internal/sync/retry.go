@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	attempts uint          = 3
+	attempts uint          = 5
 	delay    time.Duration = 1 * time.Second
 )
 

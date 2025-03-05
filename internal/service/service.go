@@ -21,7 +21,7 @@ func Init() (*Service, error) {
 		return nil, err
 	}
 
-	httpClient := conf.ClientSettings.NewHttpClient()
+	httpClient := conf.Client.NewHttpClient()
 
 	primary := pihole.NewClient(conf.Primary, httpClient)
 	var replicas []pihole.Client
@@ -43,7 +43,7 @@ func (service *Service) Run() error {
 		return err
 	}
 
-	if service.conf.Cron != nil {
+	if service.conf.Sync.Cron != nil {
 		return service.startCron(func() {
 			if err := service.doSync(service.target); err != nil {
 				log.Error().Err(err).Msg("Sync failed")
@@ -55,10 +55,10 @@ func (service *Service) Run() error {
 }
 
 func (service *Service) doSync(t sync.Target) (err error) {
-	if service.conf.FullSync {
-		err = t.FullSync()
+	if service.conf.Sync.FullSync {
+		err = t.FullSync(service.conf.Sync)
 	} else {
-		err = t.ManualSync(service.conf.SyncSettings)
+		err = t.ManualSync(service.conf.Sync)
 	}
 
 	if err != nil {
@@ -72,7 +72,7 @@ func (service *Service) doSync(t sync.Target) (err error) {
 func (service *Service) startCron(cmd func()) error {
 	cron := cron.New()
 
-	if _, err := cron.AddFunc(*service.conf.Cron, cmd); err != nil {
+	if _, err := cron.AddFunc(*service.conf.Sync.Cron, cmd); err != nil {
 		return fmt.Errorf("cron job: %w", err)
 	}
 

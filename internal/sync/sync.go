@@ -9,8 +9,8 @@ import (
 )
 
 type Target interface {
-	FullSync() error
-	ManualSync(syncSettings *config.SyncSettings) error
+	FullSync(sync *config.Sync) error
+	ManualSync(sync *config.Sync) error
 }
 
 type target struct {
@@ -25,7 +25,7 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 	}
 }
 
-func (target *target) FullSync() error {
+func (target *target) FullSync(syncConf *config.Sync) error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running full sync")
 
 	if err := target.authenticate(); err != nil {
@@ -36,6 +36,12 @@ func (target *target) FullSync() error {
 		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
+	if syncConf.RunGravity {
+		if err := target.runGravity(); err != nil {
+			return fmt.Errorf("run gravity: %w", err)
+		}
+	}
+
 	if err := target.deleteSessions(); err != nil {
 		return fmt.Errorf("delete sessions: %w", err)
 	}
@@ -43,19 +49,25 @@ func (target *target) FullSync() error {
 	return nil
 }
 
-func (target *target) ManualSync(syncSettings *config.SyncSettings) error {
+func (target *target) ManualSync(syncConf *config.Sync) error {
 	log.Info().Int("replicas", len(target.Replicas)).Msg("Running manual sync")
 
 	if err := target.authenticate(); err != nil {
 		return fmt.Errorf("authentication: %w", err)
 	}
 
-	if err := target.syncTeleporters(syncSettings.Gravity); err != nil {
+	if err := target.syncTeleporters(syncConf.GravitySettings); err != nil {
 		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
-	if err := target.syncConfigs(syncSettings.Config); err != nil {
+	if err := target.syncConfigs(syncConf.ConfigSettings); err != nil {
 		return fmt.Errorf("sync configs: %w", err)
+	}
+
+	if syncConf.RunGravity {
+		if err := target.runGravity(); err != nil {
+			return fmt.Errorf("run gravity: %w", err)
+		}
 	}
 
 	if err := target.deleteSessions(); err != nil {
@@ -95,7 +107,7 @@ func (target *target) deleteSessions() (err error) {
 	return err
 }
 
-func (target *target) syncTeleporters(manualGravity *config.ManualGravity) error {
+func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) error {
 	log.Info().Msg("Syncing Teleporters...")
 	conf, err := target.Primary.GetTeleporter()
 	if err != nil {
@@ -103,8 +115,8 @@ func (target *target) syncTeleporters(manualGravity *config.ManualGravity) error
 	}
 
 	var teleporterRequest *model.PostTeleporterRequest = nil
-	if manualGravity != nil {
-		teleporterRequest = createPostTeleporterRequest(manualGravity)
+	if gravitySettings != nil {
+		teleporterRequest = createPostTeleporterRequest(gravitySettings)
 	}
 
 	for _, replica := range target.Replicas {
@@ -118,14 +130,14 @@ func (target *target) syncTeleporters(manualGravity *config.ManualGravity) error
 	return err
 }
 
-func (target *target) syncConfigs(manualConfig *config.ManualConfig) error {
+func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 	log.Info().Msg("Syncing configs...")
 	configResponse, err := target.Primary.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	configRequest := createPatchConfigRequest(manualConfig, configResponse)
+	configRequest := createPatchConfigRequest(configSettings, configResponse)
 
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
@@ -138,7 +150,26 @@ func (target *target) syncConfigs(manualConfig *config.ManualConfig) error {
 	return err
 }
 
-func createPatchConfigRequest(config *config.ManualConfig, configResponse *model.ConfigResponse) *model.PatchConfigRequest {
+func (target *target) runGravity() error {
+	log.Info().Msg("Running gravity...")
+
+	err := target.Primary.PostRunGravity()
+	if err != nil {
+		return err
+	}
+
+	for _, replica := range target.Replicas {
+		if err := withRetry(func() error {
+			return replica.PostRunGravity()
+		}); err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
+func createPatchConfigRequest(config *config.ConfigSettings, configResponse *model.ConfigResponse) *model.PatchConfigRequest {
 	patchConfig := model.PatchConfig{}
 
 	if config.DNS {
@@ -166,7 +197,7 @@ func createPatchConfigRequest(config *config.ManualConfig, configResponse *model
 	return &model.PatchConfigRequest{Config: patchConfig}
 }
 
-func createPostTeleporterRequest(gravity *config.ManualGravity) *model.PostTeleporterRequest {
+func createPostTeleporterRequest(gravity *config.GravitySettings) *model.PostTeleporterRequest {
 	return &model.PostTeleporterRequest{
 		Config:     false,
 		DHCPLeases: gravity.DHCPLeases,

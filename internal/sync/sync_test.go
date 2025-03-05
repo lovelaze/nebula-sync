@@ -41,6 +41,17 @@ func TestTarget_FullSync(t *testing.T) {
 
 	primary.
 		EXPECT().
+		PostRunGravity().
+		Times(1).
+		Return(nil)
+	replica.
+		EXPECT().
+		PostRunGravity().
+		Times(1).
+		Return(nil)
+
+	primary.
+		EXPECT().
 		DeleteSession().
 		Times(1).
 		Return(nil)
@@ -50,7 +61,11 @@ func TestTarget_FullSync(t *testing.T) {
 		Times(1).
 		Return(nil)
 
-	err := target.FullSync()
+	err := target.FullSync(&config.Sync{
+		FullSync:   true,
+		Cron:       nil,
+		RunGravity: true,
+	})
 	require.NoError(t, err)
 }
 
@@ -60,8 +75,10 @@ func TestTarget_ManualSync(t *testing.T) {
 
 	target := NewTarget(primary, []pihole.Client{replica})
 
-	settings := config.SyncSettings{
-		Gravity: &config.ManualGravity{
+	settings := config.Sync{
+		FullSync:   false,
+		RunGravity: true,
+		GravitySettings: &config.GravitySettings{
 			DHCPLeases:        false,
 			Group:             false,
 			Adlist:            false,
@@ -71,7 +88,7 @@ func TestTarget_ManualSync(t *testing.T) {
 			Client:            false,
 			ClientByGroup:     false,
 		},
-		Config: &config.ManualConfig{
+		ConfigSettings: &config.ConfigSettings{
 			DNS:       false,
 			DHCP:      false,
 			NTP:       false,
@@ -114,6 +131,17 @@ func TestTarget_ManualSync(t *testing.T) {
 	replica.
 		EXPECT().
 		PatchConfig(mock.Anything).
+		Times(1).
+		Return(nil)
+
+	primary.
+		EXPECT().
+		PostRunGravity().
+		Times(1).
+		Return(nil)
+	replica.
+		EXPECT().
+		PostRunGravity().
 		Times(1).
 		Return(nil)
 
@@ -189,7 +217,7 @@ func Test_target_syncTeleporters(t *testing.T) {
 		Replicas: []pihole.Client{replica},
 	}
 
-	manualGravity := config.ManualGravity{
+	gravitySettings := config.GravitySettings{
 		DHCPLeases:        false,
 		Group:             false,
 		Adlist:            false,
@@ -207,11 +235,11 @@ func Test_target_syncTeleporters(t *testing.T) {
 		Return([]byte{}, nil)
 	replica.
 		EXPECT().
-		PostTeleporter([]byte{}, createPostTeleporterRequest(&manualGravity)).
+		PostTeleporter([]byte{}, createPostTeleporterRequest(&gravitySettings)).
 		Times(1).
 		Return(nil)
 
-	err := target.syncTeleporters(&manualGravity)
+	err := target.syncTeleporters(&gravitySettings)
 	assert.NoError(t, err)
 }
 
@@ -226,7 +254,7 @@ func Test_target_syncConfigs(t *testing.T) {
 
 	configResponse := model.ConfigResponse{Config: make(map[string]interface{})}
 
-	manualConfig := config.ManualConfig{
+	gravitySettings := config.ConfigSettings{
 		DNS:       false,
 		DHCP:      false,
 		NTP:       false,
@@ -245,10 +273,34 @@ func Test_target_syncConfigs(t *testing.T) {
 		Return(&configResponse, nil)
 	replica.
 		EXPECT().
-		PatchConfig(createPatchConfigRequest(&manualConfig, &configResponse)).
+		PatchConfig(createPatchConfigRequest(&gravitySettings, &configResponse)).
 		Times(1).
 		Return(nil)
 
-	err := target.syncConfigs(&manualConfig)
+	err := target.syncConfigs(&gravitySettings)
+	assert.NoError(t, err)
+}
+
+func Test_target_runGravity(t *testing.T) {
+	primary := piholemock.NewClient(t)
+	replica := piholemock.NewClient(t)
+
+	target := target{
+		Primary:  primary,
+		Replicas: []pihole.Client{replica},
+	}
+
+	primary.
+		EXPECT().
+		PostRunGravity().
+		Times(1).
+		Return(nil)
+	replica.
+		EXPECT().
+		PostRunGravity().
+		Times(1).
+		Return(nil)
+
+	err := target.runGravity()
 	assert.NoError(t, err)
 }

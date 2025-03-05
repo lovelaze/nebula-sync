@@ -12,28 +12,17 @@ import (
 )
 
 type Config struct {
-	Primary        model.PiHole    `required:"true" envconfig:"PRIMARY"`
-	Replicas       []model.PiHole  `required:"true" envconfig:"REPLICAS"`
-	FullSync       bool            `required:"true" envconfig:"FULL_SYNC"`
-	Cron           *string         `envconfig:"CRON"`
-	ClientSettings *ClientSettings `ignored:"true"`
-	SyncSettings   *SyncSettings   `ignored:"true"`
+	Primary  model.PiHole   `required:"true" envconfig:"PRIMARY"`
+	Replicas []model.PiHole `required:"true" envconfig:"REPLICAS"`
+	Client   *Client        `ignored:"true"`
+	Sync     *Sync          `ignored:"true"`
 }
 
-type ClientSettings struct {
+type Client struct {
 	SkipSSLVerification bool `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
 }
 
-func (cs *ClientSettings) NewHttpClient() *http.Client {
-	return &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: cs.SkipSSLVerification},
-		},
-	}
-}
-
-type ManualGravity struct {
+type GravitySettings struct {
 	DHCPLeases        bool `default:"false" envconfig:"SYNC_GRAVITY_DHCP_LEASES"`
 	Group             bool `default:"false" envconfig:"SYNC_GRAVITY_GROUP"`
 	Adlist            bool `default:"false" envconfig:"SYNC_GRAVITY_AD_LIST"`
@@ -44,7 +33,7 @@ type ManualGravity struct {
 	ClientByGroup     bool `default:"false" envconfig:"SYNC_GRAVITY_CLIENT_BY_GROUP"`
 }
 
-type ManualConfig struct {
+type ConfigSettings struct {
 	DNS       bool `default:"false" envconfig:"SYNC_CONFIG_DNS"`
 	DHCP      bool `default:"false" envconfig:"SYNC_CONFIG_DHCP"`
 	NTP       bool `default:"false" envconfig:"SYNC_CONFIG_NTP"`
@@ -56,9 +45,12 @@ type ManualConfig struct {
 	Debug     bool `default:"false" envconfig:"SYNC_CONFIG_DEBUG"`
 }
 
-type SyncSettings struct {
-	Gravity *ManualGravity `ignored:"true"`
-	Config  *ManualConfig  `ignored:"true"`
+type Sync struct {
+	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
+	Cron            *string `envconfig:"CRON"`
+	RunGravity      bool    `default:"false" envconfig:"RUN_GRAVITY"`
+	GravitySettings *GravitySettings
+	ConfigSettings  *ConfigSettings
 }
 
 func (c *Config) Load() error {
@@ -66,46 +58,36 @@ func (c *Config) Load() error {
 		return fmt.Errorf("env vars: %w", err)
 	}
 
-	if err := c.loadClientSettings(); err != nil {
+	if err := c.loadClient(); err != nil {
 		return err
 	}
 
-	if !c.FullSync {
-		if err := c.loadSyncSettings(); err != nil {
-			return err
-		}
+	if err := c.loadSync(); err != nil {
+		return err
 	}
+
 	return nil
 }
 
-func (c *Config) loadClientSettings() error {
-	clientSettings := ClientSettings{}
+func (c *Config) loadClient() error {
+	client := Client{}
 
-	if err := envconfig.Process("", &clientSettings); err != nil {
+	if err := envconfig.Process("", &client); err != nil {
 		return fmt.Errorf("client env vars: %w", err)
 	}
 
-	c.ClientSettings = &clientSettings
+	c.Client = &client
 
 	return nil
 }
 
-func (c *Config) loadSyncSettings() error {
-	manualGravity := ManualGravity{}
-	if err := envconfig.Process("", &manualGravity); err != nil {
-		return fmt.Errorf("gravity env vars: %w", err)
+func (c *Config) loadSync() error {
+	sync := Sync{}
+	if err := envconfig.Process("", &sync); err != nil {
+		return fmt.Errorf("sync env vars: %w", err)
 	}
 
-	manualConfig := ManualConfig{}
-	if err := envconfig.Process("", &manualConfig); err != nil {
-		return fmt.Errorf("config env vars: %w", err)
-	}
-
-	c.SyncSettings = &SyncSettings{
-		Gravity: &manualGravity,
-		Config:  &manualConfig,
-	}
-
+	c.Sync = &sync
 	return nil
 }
 
@@ -121,19 +103,28 @@ func (c *Config) String() string {
 	}
 
 	cron := ""
-	if c.Cron != nil {
-		cron = *c.Cron
+	if c.Sync.Cron != nil {
+		cron = *c.Sync.Cron
 	}
 
-	syncSettings := ""
-	if c.SyncSettings != nil {
-		if mc := c.SyncSettings.Config; mc != nil {
-			syncSettings += fmt.Sprintf("config=%+v", *mc)
+	sync := ""
+	if c.Sync != nil {
+		if mc := c.Sync.ConfigSettings; mc != nil {
+			sync += fmt.Sprintf("config=%+v", *mc)
 		}
-		if gc := c.SyncSettings.Gravity; gc != nil {
-			syncSettings += fmt.Sprintf(", gravity=%+v", *gc)
+		if gc := c.Sync.GravitySettings; gc != nil {
+			sync += fmt.Sprintf(", gravity=%+v", *gc)
 		}
 	}
 
-	return fmt.Sprintf("primary=%s, replicas=%s, fullSync=%t, cron=%s, syncSettings=%s", c.Primary.Url, replicas, c.FullSync, cron, syncSettings)
+	return fmt.Sprintf("primary=%s, replicas=%s, fullSync=%t, cron=%s, sync=%s", c.Primary.Url, replicas, c.Sync.FullSync, cron, sync)
+}
+
+func (cs *Client) NewHttpClient() *http.Client {
+	return &http.Client{
+		Timeout: 20 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: cs.SkipSSLVerification},
+		},
+	}
 }

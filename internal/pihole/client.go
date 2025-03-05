@@ -35,6 +35,7 @@ type Client interface {
 	PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error
 	GetConfig() (configResponse *model.ConfigResponse, err error)
 	PatchConfig(patchRequest *model.PatchConfigRequest) error
+	PostRunGravity() error
 	String() string
 	ApiPath(target string) string
 }
@@ -307,6 +308,31 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 	}
 
 	return client.wrapError(err, req)
+}
+
+func (client *client) PostRunGravity() error {
+	client.logger.Debug().Msg("Post run gravity")
+	if err := client.auth.verify(); err != nil {
+		return client.wrapError(err, nil)
+	}
+
+	req, err := http.NewRequest("POST", client.ApiPath("action/gravity"), nil)
+	if err != nil {
+		return client.wrapError(err, req)
+	}
+	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("User-Agent", userAgent)
+
+	response, err := client.httpClient.Do(req)
+	if err != nil {
+		return client.wrapError(err, req)
+	}
+
+	if err := successfulHttpStatus(response.StatusCode); err != nil {
+		return client.wrapError(err, req)
+	}
+
+	return err
 }
 
 func (client *client) String() string {

@@ -12,8 +12,7 @@ func TestConfig_Load(t *testing.T) {
 
 	t.Setenv("PRIMARY", "http://localhost:1337|asdf")
 	t.Setenv("REPLICAS", "http://localhost:1338|qwerty")
-	t.Setenv("FULL_SYNC", "true")
-	t.Setenv("CRON", "* * * * *")
+	t.Setenv("FULL_SYNC", "false")
 
 	err := conf.Load()
 	require.NoError(t, err)
@@ -23,14 +22,16 @@ func TestConfig_Load(t *testing.T) {
 	assert.Len(t, conf.Replicas, 1)
 	assert.Equal(t, "http://localhost:1338", conf.Replicas[0].Url.String())
 	assert.Equal(t, "qwerty", conf.Replicas[0].Password)
-	assert.Equal(t, true, conf.FullSync)
-	assert.Equal(t, "* * * * *", *conf.Cron)
-	assert.Nil(t, conf.SyncSettings)
+	assert.Equal(t, false, conf.Sync.FullSync)
 }
 
-func TestConfig_loadSyncSettings(t *testing.T) {
+func TestConfig_loadSync(t *testing.T) {
 	conf := Config{}
-	assert.Nil(t, conf.SyncSettings)
+	assert.Nil(t, conf.Sync)
+
+	t.Setenv("FULL_SYNC", "true")
+	t.Setenv("CRON", "* * * * *")
+	t.Setenv("RUN_GRAVITY", "true")
 
 	t.Setenv("SYNC_CONFIG_DNS", "true")
 	t.Setenv("SYNC_CONFIG_DHCP", "true")
@@ -49,39 +50,43 @@ func TestConfig_loadSyncSettings(t *testing.T) {
 	t.Setenv("SYNC_GRAVITY_CLIENT", "true")
 	t.Setenv("SYNC_GRAVITY_CLIENT_BY_GROUP", "true")
 
-	err := conf.loadSyncSettings()
+	err := conf.loadSync()
 	require.NoError(t, err)
 
-	assert.NotNil(t, conf.SyncSettings.Config)
-	assert.NotNil(t, conf.SyncSettings.Gravity)
+	assert.Equal(t, true, conf.Sync.FullSync)
+	assert.Equal(t, "* * * * *", *conf.Sync.Cron)
+	assert.Equal(t, true, conf.Sync.RunGravity)
 
-	assert.True(t, conf.SyncSettings.Config.DNS)
-	assert.True(t, conf.SyncSettings.Config.DHCP)
-	assert.True(t, conf.SyncSettings.Config.NTP)
-	assert.True(t, conf.SyncSettings.Config.Resolver)
-	assert.True(t, conf.SyncSettings.Config.Database)
-	assert.True(t, conf.SyncSettings.Config.Misc)
-	assert.True(t, conf.SyncSettings.Config.Debug)
+	assert.NotNil(t, conf.Sync.ConfigSettings)
+	assert.NotNil(t, conf.Sync.GravitySettings)
 
-	assert.True(t, conf.SyncSettings.Gravity.DHCPLeases)
-	assert.True(t, conf.SyncSettings.Gravity.Group)
-	assert.True(t, conf.SyncSettings.Gravity.Adlist)
-	assert.True(t, conf.SyncSettings.Gravity.AdlistByGroup)
-	assert.True(t, conf.SyncSettings.Gravity.Domainlist)
-	assert.True(t, conf.SyncSettings.Gravity.DomainlistByGroup)
-	assert.True(t, conf.SyncSettings.Gravity.Client)
-	assert.True(t, conf.SyncSettings.Gravity.ClientByGroup)
+	assert.True(t, conf.Sync.ConfigSettings.DNS)
+	assert.True(t, conf.Sync.ConfigSettings.DHCP)
+	assert.True(t, conf.Sync.ConfigSettings.NTP)
+	assert.True(t, conf.Sync.ConfigSettings.Resolver)
+	assert.True(t, conf.Sync.ConfigSettings.Database)
+	assert.True(t, conf.Sync.ConfigSettings.Misc)
+	assert.True(t, conf.Sync.ConfigSettings.Debug)
+
+	assert.True(t, conf.Sync.GravitySettings.DHCPLeases)
+	assert.True(t, conf.Sync.GravitySettings.Group)
+	assert.True(t, conf.Sync.GravitySettings.Adlist)
+	assert.True(t, conf.Sync.GravitySettings.AdlistByGroup)
+	assert.True(t, conf.Sync.GravitySettings.Domainlist)
+	assert.True(t, conf.Sync.GravitySettings.DomainlistByGroup)
+	assert.True(t, conf.Sync.GravitySettings.Client)
+	assert.True(t, conf.Sync.GravitySettings.ClientByGroup)
 }
 
-func TestConfig_LoadClientSettings(t *testing.T) {
+func TestConfig_LoadClient(t *testing.T) {
 	conf := Config{}
 
 	t.Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
 
-	err := conf.loadClientSettings()
+	err := conf.loadClient()
 	require.NoError(t, err)
 
-	assert.Equal(t, true, conf.ClientSettings.SkipSSLVerification)
+	assert.Equal(t, true, conf.Client.SkipSSLVerification)
 }
 
 func TestConfig_LoadEnvFile(t *testing.T) {

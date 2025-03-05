@@ -373,6 +373,51 @@ func (_c *Client_PostAuth_Call) RunAndReturn(run func() error) *Client_PostAuth_
 	return _c
 }
 
+// PostRunGravity provides a mock function with given fields:
+func (_m *Client) PostRunGravity() error {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for PostRunGravity")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Client_PostRunGravity_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PostRunGravity'
+type Client_PostRunGravity_Call struct {
+	*mock.Call
+}
+
+// PostRunGravity is a helper method to define mock.On call
+func (_e *Client_Expecter) PostRunGravity() *Client_PostRunGravity_Call {
+	return &Client_PostRunGravity_Call{Call: _e.mock.On("PostRunGravity")}
+}
+
+func (_c *Client_PostRunGravity_Call) Run(run func()) *Client_PostRunGravity_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_PostRunGravity_Call) Return(_a0 error) *Client_PostRunGravity_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Client_PostRunGravity_Call) RunAndReturn(run func() error) *Client_PostRunGravity_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // PostTeleporter provides a mock function with given fields: payload, teleporterRequest
 func (_m *Client) PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error {
 	ret := _m.Called(payload, teleporterRequest)

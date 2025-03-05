@@ -20,17 +20,17 @@ func (_m *Target) EXPECT() *Target_Expecter {
 	return &Target_Expecter{mock: &_m.Mock}
 }
 
-// FullSync provides a mock function with given fields:
-func (_m *Target) FullSync() error {
-	ret := _m.Called()
+// FullSync provides a mock function with given fields: _a0
+func (_m *Target) FullSync(_a0 *config.Sync) error {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FullSync")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(*config.Sync) error); ok {
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -44,13 +44,14 @@ type Target_FullSync_Call struct {
 }
 
 // FullSync is a helper method to define mock.On call
-func (_e *Target_Expecter) FullSync() *Target_FullSync_Call {
-	return &Target_FullSync_Call{Call: _e.mock.On("FullSync")}
+//   - _a0 *config.Sync
+func (_e *Target_Expecter) FullSync(_a0 interface{}) *Target_FullSync_Call {
+	return &Target_FullSync_Call{Call: _e.mock.On("FullSync", _a0)}
 }
 
-func (_c *Target_FullSync_Call) Run(run func()) *Target_FullSync_Call {
+func (_c *Target_FullSync_Call) Run(run func(_a0 *config.Sync)) *Target_FullSync_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(*config.Sync))
 	})
 	return _c
 }
@@ -60,22 +61,22 @@ func (_c *Target_FullSync_Call) Return(_a0 error) *Target_FullSync_Call {
 	return _c
 }
 
-func (_c *Target_FullSync_Call) RunAndReturn(run func() error) *Target_FullSync_Call {
+func (_c *Target_FullSync_Call) RunAndReturn(run func(*config.Sync) error) *Target_FullSync_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// ManualSync provides a mock function with given fields: syncSettings
-func (_m *Target) ManualSync(syncSettings *config.SyncSettings) error {
-	ret := _m.Called(syncSettings)
+// ManualSync provides a mock function with given fields: _a0
+func (_m *Target) ManualSync(_a0 *config.Sync) error {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ManualSync")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*config.SyncSettings) error); ok {
-		r0 = rf(syncSettings)
+	if rf, ok := ret.Get(0).(func(*config.Sync) error); ok {
+		r0 = rf(_a0)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -89,14 +90,14 @@ type Target_ManualSync_Call struct {
 }
 
 // ManualSync is a helper method to define mock.On call
-//   - syncSettings *config.SyncSettings
-func (_e *Target_Expecter) ManualSync(syncSettings interface{}) *Target_ManualSync_Call {
-	return &Target_ManualSync_Call{Call: _e.mock.On("ManualSync", syncSettings)}
+//   - _a0 *config.Sync
+func (_e *Target_Expecter) ManualSync(_a0 interface{}) *Target_ManualSync_Call {
+	return &Target_ManualSync_Call{Call: _e.mock.On("ManualSync", _a0)}
 }
 
-func (_c *Target_ManualSync_Call) Run(run func(syncSettings *config.SyncSettings)) *Target_ManualSync_Call {
+func (_c *Target_ManualSync_Call) Run(run func(_a0 *config.Sync)) *Target_ManualSync_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*config.SyncSettings))
+		run(args[0].(*config.Sync))
 	})
 	return _c
 }
@@ -106,7 +107,7 @@ func (_c *Target_ManualSync_Call) Return(_a0 error) *Target_ManualSync_Call {
 	return _c
 }
 
-func (_c *Target_ManualSync_Call) RunAndReturn(run func(*config.SyncSettings) error) *Target_ManualSync_Call {
+func (_c *Target_ManualSync_Call) RunAndReturn(run func(*config.Sync) error) *Target_ManualSync_Call {
 	_c.Call.Return(run)
 	return _c
 }

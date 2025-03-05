@@ -10,15 +10,16 @@ import (
 
 func TestRun_full(t *testing.T) {
 	conf := config.Config{
-		Primary:      model.PiHole{},
-		Replicas:     []model.PiHole{},
-		FullSync:     true,
-		Cron:         nil,
-		SyncSettings: nil,
+		Primary:  model.PiHole{},
+		Replicas: []model.PiHole{},
+		Sync: &config.Sync{
+			FullSync: true,
+			Cron:     nil,
+		},
 	}
 
 	target := syncmock.NewTarget(t)
-	target.On("FullSync").Return(nil)
+	target.On("FullSync", conf.Sync).Return(nil)
 
 	service := Service{
 		target: target,
@@ -28,20 +29,21 @@ func TestRun_full(t *testing.T) {
 	err := service.Run()
 	require.NoError(t, err)
 
-	target.AssertCalled(t, "FullSync")
+	target.AssertCalled(t, "FullSync", conf.Sync)
 }
 
 func TestRun_manual(t *testing.T) {
 	conf := config.Config{
-		Primary:      model.PiHole{},
-		Replicas:     []model.PiHole{},
-		FullSync:     false,
-		Cron:         nil,
-		SyncSettings: nil,
+		Primary:  model.PiHole{},
+		Replicas: []model.PiHole{},
+		Sync: &config.Sync{
+			FullSync: false,
+			Cron:     nil,
+		},
 	}
 
 	target := syncmock.NewTarget(t)
-	target.On("ManualSync", (*config.SyncSettings)(nil)).Return(nil)
+	target.On("ManualSync", conf.Sync).Return(nil)
 
 	service := Service{
 		target: target,
@@ -51,5 +53,5 @@ func TestRun_manual(t *testing.T) {
 	err := service.Run()
 	require.NoError(t, err)
 
-	target.AssertCalled(t, "ManualSync", (*config.SyncSettings)(nil))
+	target.AssertCalled(t, "ManualSync", conf.Sync)
 }

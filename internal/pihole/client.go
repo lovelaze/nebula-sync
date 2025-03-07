@@ -115,6 +115,7 @@ func (client *client) DeleteSession() error {
 	}
 
 	if client.auth.sid == "" {
+		log.Debug().Msg("Trying to delete empty session")
 		return nil
 	}
 

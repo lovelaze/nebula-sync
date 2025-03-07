@@ -106,6 +106,12 @@ func (suite *clientTestSuite) TestClient_PatchConfig() {
 	assert.NoError(suite.T(), err)
 }
 
+func (suite *clientTestSuite) TestClient_PostRunGravity() {
+	err := suite.client.PostRunGravity()
+
+	assert.NoError(suite.T(), err)
+}
+
 func TestClient_String(t *testing.T) {
 	piHole := model.NewPiHole("http://asdfasdf.com:1234", apiPassword)
 	s := NewClient(piHole, httpClient).String()

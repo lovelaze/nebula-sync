@@ -122,9 +122,7 @@ func createPatchConfigRequest(config *config.ConfigSettings, configResponse *mod
 	patchConfig := model.PatchConfig{}
 
 	if config.DNS {
-		i := configResponse.Config["dns"]
-		m := i.(map[string]interface{})
-		patchConfig.DNS = m
+		patchConfig.DNS = configResponse.Config["dns"].(map[string]interface{})
 	}
 	if config.DHCP {
 		patchConfig.DHCP = configResponse.Config["dhcp"].(map[string]interface{})

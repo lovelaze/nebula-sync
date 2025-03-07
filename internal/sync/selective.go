@@ -2,12 +2,15 @@ package sync
 
 import (
 	"fmt"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/rs/zerolog/log"
 )
 
 func (target *target) SelectiveSync(syncConf *config.Sync) error {
 	log.Info().Str("mode", "selective").Int("replicas", len(target.Replicas)).Msg("Running sync")
+
+	defer target.deleteSessions()
 
 	if err := target.authenticate(); err != nil {
 		return fmt.Errorf("authentication: %w", err)
@@ -26,10 +29,5 @@ func (target *target) SelectiveSync(syncConf *config.Sync) error {
 			return fmt.Errorf("run gravity: %w", err)
 		}
 	}
-
-	if err := target.deleteSessions(); err != nil {
-		return fmt.Errorf("delete sessions: %w", err)
-	}
-
 	return nil
 }

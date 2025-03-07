@@ -1,12 +1,13 @@
 package sync
 
 import (
+	"testing"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_target_authenticate(t *testing.T) {
@@ -37,8 +38,7 @@ func Test_target_deleteSessions(t *testing.T) {
 	primary.EXPECT().DeleteSession().Once().Return(nil)
 	replica.EXPECT().DeleteSession().Once().Return(nil)
 
-	err := target.deleteSessions()
-	assert.NoError(t, err)
+	target.deleteSessions()
 }
 
 func Test_target_syncTeleporters(t *testing.T) {

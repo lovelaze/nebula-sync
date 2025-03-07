@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/sync"
@@ -30,7 +31,7 @@ func Init() (*Service, error) {
 	}
 
 	return &Service{
-		target: sync.NewTarget(primary, replicas),
+		target: sync.NewTarget(primary, replicas, conf.Client),
 		conf:   conf,
 	}, nil
 }

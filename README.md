@@ -85,6 +85,7 @@ The following environment variables can be specified:
 | `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
 | `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips SSL certificate verification                 |
+| `CLIENT_RETRY_DELAY`               | 1       | 5               | Seconds to delay betweeen connection attempts      |
 
 > **Note:** The following optional settings apply only if `FULL_SYNC=false`. They allow for granular control of synchronization if a full sync is not wanted.
 

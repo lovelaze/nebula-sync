@@ -15,12 +15,14 @@ type Target interface {
 type target struct {
 	Primary  pihole.Client
 	Replicas []pihole.Client
+	Client   *config.Client
 }
 
-func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
+func NewTarget(primary pihole.Client, replicas []pihole.Client, client *config.Client) Target {
 	return &target{
 		Primary:  primary,
 		Replicas: replicas,
+		Client:   client,
 	}
 }
 
@@ -33,7 +35,7 @@ func (target *target) authenticate() (err error) {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PostAuth()
-		}, AttemptsPostAuth); err != nil {
+		}, AttemptsPostAuth, target.Client.RetryDelay); err != nil {
 			return err
 		}
 	}
@@ -50,7 +52,7 @@ func (target *target) deleteSessions() {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.DeleteSession()
-		}, AttemptsDeleteSession); err != nil {
+		}, AttemptsDeleteSession, target.Client.RetryDelay); err != nil {
 			log.Warn().Msgf("Failed to close session for target : %s", replica.String())
 		}
 	}
@@ -71,7 +73,7 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PostTeleporter(conf, teleporterRequest)
-		}, AttemptsPostTeleporter); err != nil {
+		}, AttemptsPostTeleporter, target.Client.RetryDelay); err != nil {
 			return err
 		}
 	}
@@ -91,7 +93,7 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PatchConfig(configRequest)
-		}, AttemptsPatchConfig); err != nil {
+		}, AttemptsPatchConfig, target.Client.RetryDelay); err != nil {
 			return err
 		}
 	}
@@ -110,7 +112,7 @@ func (target *target) runGravity() error {
 	for _, replica := range target.Replicas {
 		if err := withRetry(func() error {
 			return replica.PostRunGravity()
-		}, AttemptsPostRunGravity); err != nil {
+		}, AttemptsPostRunGravity, target.Client.RetryDelay); err != nil {
 			return err
 		}
 	}

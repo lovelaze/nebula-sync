@@ -1,20 +1,26 @@
 package sync
 
 import (
+	"testing"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestTarget_FullSync(t *testing.T) {
 	primary := piholemock.NewClient(t)
 	replica := piholemock.NewClient(t)
 
-	target := NewTarget(primary, []pihole.Client{replica})
+	mockClient := &config.Client{
+		SkipSSLVerification: false,
+		RetryDelay:          1,
+	}
+
+	target := NewTarget(primary, []pihole.Client{replica}, mockClient)
 
 	primary.EXPECT().PostAuth().Once().Return(nil)
 	replica.EXPECT().PostAuth().Once().Return(nil)

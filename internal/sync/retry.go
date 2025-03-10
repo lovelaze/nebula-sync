@@ -16,13 +16,14 @@ const (
 	AttemptsDeleteSession  = 3
 )
 
-func withRetry(retryFunc func() error, attempts, delay uint) error {
+func withRetry(retryFunc func() error, attempts uint, delay int64) error {
 	return retry.Do(
 		func() error {
 			return retryFunc()
 		},
 		retry.Attempts(attempts),
 		retry.Delay(time.Duration(delay)*time.Second),
+		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(n uint, err error) {
 			log.Debug().Msg(fmt.Sprintf("Retrying(%d): %v", n+1, err))
 		}),

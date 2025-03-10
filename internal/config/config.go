@@ -20,8 +20,8 @@ type Config struct {
 }
 
 type Client struct {
-	SkipSSLVerification bool `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
-	RetryDelay          uint `default:"1" envconfig:"CLIENT_RETRY_DELAY"`
+	SkipSSLVerification bool  `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
+	RetryDelay          int64 `default:"1" envconfig:"CLIENT_RETRY_DELAY_SECONDS"`
 }
 
 type GravitySettings struct {

@@ -14,12 +14,7 @@ func TestTarget_SelectiveSync(t *testing.T) {
 	primary := piholemock.NewClient(t)
 	replica := piholemock.NewClient(t)
 
-	mockClient := &config.Client{
-		SkipSSLVerification: false,
-		RetryDelay:          1,
-	}
-
-	target := NewTarget(primary, []pihole.Client{replica}, mockClient)
+	target := NewTarget(primary, []pihole.Client{replica})
 
 	settings := config.Sync{
 		FullSync:   false,

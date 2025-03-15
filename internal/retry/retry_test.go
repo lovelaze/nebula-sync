@@ -1,7 +1,8 @@
-package sync
+package retry
 
 import (
 	"errors"
+	"github.com/lovelaze/nebula-sync/internal/config"
 	"testing"
 	"time"
 
@@ -14,15 +15,19 @@ import (
 func TestWithRetry_DelayBetweenRetries(t *testing.T) {
 	t.Parallel()
 
+	Init(&config.Client{
+		RetryDelay: 1,
+	})
+
 	counter := 0
 	start := time.Now()
-	err := withRetry(func() error {
+	err := Fixed(func() error {
 		counter++
 		if counter < 3 {
 			return errors.New("test error")
 		}
 		return nil
-	}, 3, 1) // 3 attempts, 1-second delay
+	}, 3) // 3 attempts, 1-second delay
 
 	elapsed := time.Since(start)
 
@@ -35,11 +40,15 @@ func TestWithRetry_DelayBetweenRetries(t *testing.T) {
 func TestWithRetry_NoRetriesOnImmediateSuccess(t *testing.T) {
 	t.Parallel()
 
+	Init(&config.Client{
+		RetryDelay: 2,
+	})
+
 	counter := 0
-	err := withRetry(func() error {
+	err := Fixed(func() error {
 		counter++
 		return nil
-	}, 5, 2) // 5 attempts, 2-second delay
+	}, 5) // 5 attempts, 2-second delay
 
 	assert.NoError(t, err, "Expected no error when function succeeds immediately")
 	assert.Equal(t, 1, counter, "Expected function to run only once without retries")
@@ -49,14 +58,18 @@ func TestWithRetry_NoRetriesOnImmediateSuccess(t *testing.T) {
 func TestWithRetry_SuccessAfterRetries(t *testing.T) {
 	t.Parallel()
 
+	Init(&config.Client{
+		RetryDelay: 1,
+	})
+
 	counter := 0
-	err := withRetry(func() error {
+	err := Fixed(func() error {
 		counter++
 		if counter < 2 {
 			return errors.New("test error")
 		}
 		return nil
-	}, 3, 1) // 3 attempts, 1-second delay
+	}, 3) // 3 attempts, 1-second delay
 
 	assert.NoError(t, err, "Expected success before max attempts")
 	assert.Equal(t, 2, counter, "Expected function to retry once before success")
@@ -66,11 +79,15 @@ func TestWithRetry_SuccessAfterRetries(t *testing.T) {
 func TestWithRetry_MaxAttemptsFailure(t *testing.T) {
 	t.Parallel()
 
+	Init(&config.Client{
+		RetryDelay: 1,
+	})
+
 	counter := 0
-	err := withRetry(func() error {
+	err := Fixed(func() error {
 		counter++
 		return errors.New("test error")
-	}, 3, 1) // 3 attempts, 1-second delay
+	}, 3) // 3 attempts, 1-second delay
 
 	assert.Error(t, err, "Expected an error after max attempts")
 	assert.Equal(t, 3, counter, "Expected function to be retried 3 times")

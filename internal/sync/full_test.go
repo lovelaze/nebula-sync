@@ -15,12 +15,7 @@ func TestTarget_FullSync(t *testing.T) {
 	primary := piholemock.NewClient(t)
 	replica := piholemock.NewClient(t)
 
-	mockClient := &config.Client{
-		SkipSSLVerification: false,
-		RetryDelay:          1,
-	}
-
-	target := NewTarget(primary, []pihole.Client{replica}, mockClient)
+	target := NewTarget(primary, []pihole.Client{replica})
 
 	primary.EXPECT().PostAuth().Once().Return(nil)
 	replica.EXPECT().PostAuth().Once().Return(nil)

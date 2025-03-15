@@ -4,6 +4,7 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"github.com/lovelaze/nebula-sync/internal/retry"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,11 +19,10 @@ type target struct {
 	Client   *config.Client
 }
 
-func NewTarget(primary pihole.Client, replicas []pihole.Client, client *config.Client) Target {
+func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 	return &target{
 		Primary:  primary,
 		Replicas: replicas,
-		Client:   client,
 	}
 }
 
@@ -33,9 +33,9 @@ func (target *target) authenticate() (err error) {
 	}
 
 	for _, replica := range target.Replicas {
-		if err := withRetry(func() error {
+		if err := retry.Fixed(func() error {
 			return replica.PostAuth()
-		}, AttemptsPostAuth, target.Client.RetryDelay); err != nil {
+		}, retry.AttemptsPostAuth); err != nil {
 			return err
 		}
 	}
@@ -50,9 +50,9 @@ func (target *target) deleteSessions() {
 	}
 
 	for _, replica := range target.Replicas {
-		if err := withRetry(func() error {
+		if err := retry.Fixed(func() error {
 			return replica.DeleteSession()
-		}, AttemptsDeleteSession, target.Client.RetryDelay); err != nil {
+		}, retry.AttemptsDeleteSession); err != nil {
 			log.Warn().Msgf("Failed to close session for target : %s", replica.String())
 		}
 	}
@@ -71,9 +71,9 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 	}
 
 	for _, replica := range target.Replicas {
-		if err := withRetry(func() error {
+		if err := retry.Fixed(func() error {
 			return replica.PostTeleporter(conf, teleporterRequest)
-		}, AttemptsPostTeleporter, target.Client.RetryDelay); err != nil {
+		}, retry.AttemptsPostTeleporter); err != nil {
 			return err
 		}
 	}
@@ -91,9 +91,9 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 	configRequest := createPatchConfigRequest(configSettings, configResponse)
 
 	for _, replica := range target.Replicas {
-		if err := withRetry(func() error {
+		if err := retry.Fixed(func() error {
 			return replica.PatchConfig(configRequest)
-		}, AttemptsPatchConfig, target.Client.RetryDelay); err != nil {
+		}, retry.AttemptsPatchConfig); err != nil {
 			return err
 		}
 	}
@@ -110,9 +110,9 @@ func (target *target) runGravity() error {
 	}
 
 	for _, replica := range target.Replicas {
-		if err := withRetry(func() error {
+		if err := retry.Fixed(func() error {
 			return replica.PostRunGravity()
-		}, AttemptsPostRunGravity, target.Client.RetryDelay); err != nil {
+		}, retry.AttemptsPostRunGravity); err != nil {
 			return err
 		}
 	}

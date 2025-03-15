@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/lovelaze/nebula-sync/internal/retry"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
@@ -23,6 +24,7 @@ func Init() (*Service, error) {
 	}
 
 	httpClient := conf.Client.NewHttpClient()
+	retry.Init(conf.Client)
 
 	primary := pihole.NewClient(conf.Primary, httpClient)
 	var replicas []pihole.Client
@@ -31,7 +33,7 @@ func Init() (*Service, error) {
 	}
 
 	return &Service{
-		target: sync.NewTarget(primary, replicas, conf.Client),
+		target: sync.NewTarget(primary, replicas),
 		conf:   conf,
 	}, nil
 }

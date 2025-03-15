@@ -1,7 +1,8 @@
-package sync
+package retry
 
 import (
 	"fmt"
+	"github.com/lovelaze/nebula-sync/internal/config"
 	"time"
 
 	"github.com/avast/retry-go"
@@ -16,13 +17,21 @@ const (
 	AttemptsDeleteSession  = 3
 )
 
-func withRetry(retryFunc func() error, attempts uint, delay int64) error {
+var (
+	delay time.Duration
+)
+
+func Init(clientConfig *config.Client) {
+	delay = time.Duration(clientConfig.RetryDelay) * time.Second
+}
+
+func Fixed(retryFunc func() error, attempts uint) error {
 	return retry.Do(
 		func() error {
 			return retryFunc()
 		},
 		retry.Attempts(attempts),
-		retry.Delay(time.Duration(delay)*time.Second),
+		retry.Delay(delay),
 		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(n uint, err error) {
 			log.Debug().Msg(fmt.Sprintf("Retrying(%d): %v", n+1, err))

@@ -3,9 +3,6 @@ package config
 import (
 	"crypto/tls"
 	"fmt"
-	"net/http"
-	"time"
-
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
@@ -123,8 +120,17 @@ func (c *Config) String() string {
 }
 
 func (cs *Client) NewHttpClient() *http.Client {
+	defaultTimeout := 10 * time.Second
+
+	timeoutEnv := os.Getenv("HTTP_CLIENT_TIMEOUT")
+	if timeoutEnv != "" {
+		if timeout, err := strconv.Atoi(timeoutEnv); err == nil {
+			defaultTimeout = time.Duration(timeout) * time.Second
+		}
+	}
+
 	return &http.Client{
-		Timeout: 20 * time.Second,
+		Timeout: defaultTimeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: cs.SkipSSLVerification},
 		},

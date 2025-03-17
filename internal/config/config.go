@@ -120,7 +120,7 @@ func (c *Config) String() string {
 }
 
 func (cs *Client) NewHttpClient() *http.Client {
-	defaultTimeout := 10 * time.Second
+	defaultTimeout := 20 * time.Second
 
 	timeoutEnv := os.Getenv("HTTP_CLIENT_TIMEOUT")
 	if timeoutEnv != "" {

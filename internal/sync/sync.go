@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
@@ -24,6 +25,24 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 		Primary:  primary,
 		Replicas: replicas,
 	}
+}
+
+func (target *target) sync(syncFunc func() error, mode string) (err error) {
+	log.Info().Str("mode", mode).Int("replicas", len(target.Replicas)).Msg("Running sync")
+
+	defer func() {
+		if err != nil {
+			log.Error().Err(err).Msg("Error during sync")
+		}
+		target.deleteSessions()
+	}()
+
+	if err := target.authenticate(); err != nil {
+		return fmt.Errorf("authenticate: %w", err)
+	}
+
+	return syncFunc()
+
 }
 
 func (target *target) authenticate() (err error) {
@@ -59,7 +78,7 @@ func (target *target) deleteSessions() {
 }
 
 func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) error {
-	log.Info().Msg("Syncing Teleporters...")
+	log.Info().Msg("Syncing teleporters...")
 	conf, err := target.Primary.GetTeleporter()
 	if err != nil {
 		return err
@@ -104,8 +123,7 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 func (target *target) runGravity() error {
 	log.Info().Msg("Running gravity...")
 
-	err := target.Primary.PostRunGravity()
-	if err != nil {
+	if err := target.Primary.PostRunGravity(); err != nil {
 		return err
 	}
 
@@ -117,7 +135,7 @@ func (target *target) runGravity() error {
 		}
 	}
 
-	return err
+	return nil
 }
 
 func createPatchConfigRequest(config *config.ConfigSettings, configResponse *model.ConfigResponse) *model.PatchConfigRequest {

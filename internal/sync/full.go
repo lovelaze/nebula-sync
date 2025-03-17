@@ -4,19 +4,17 @@ import (
 	"fmt"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/rs/zerolog/log"
 )
 
-func (target *target) FullSync(syncConf *config.Sync) error {
-	log.Info().Str("mode", "full").Int("replicas", len(target.Replicas)).Msg("Running sync")
+func (target *target) FullSync(conf *config.Sync) (err error) {
+	return target.sync(func() error {
+		return target.full(conf)
+	}, "full")
+}
+
+func (target *target) full(conf *config.Sync) error {
 	gravitySettings := newFullSyncGravitySettings()
 	configSettings := newFullSyncConfigSettings()
-
-	defer target.deleteSessions()
-
-	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authenticate: %w", err)
-	}
 
 	if err := target.syncTeleporters(gravitySettings); err != nil {
 		return fmt.Errorf("sync teleporters: %w", err)
@@ -26,7 +24,7 @@ func (target *target) FullSync(syncConf *config.Sync) error {
 		return fmt.Errorf("sync configs: %w", err)
 	}
 
-	if syncConf.RunGravity {
+	if conf.RunGravity {
 		if err := target.runGravity(); err != nil {
 			return fmt.Errorf("run gravity: %w", err)
 		}

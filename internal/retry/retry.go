@@ -32,6 +32,7 @@ func Fixed(retryFunc func() error, attempts uint) error {
 		},
 		retry.Attempts(attempts),
 		retry.Delay(delay),
+		retry.LastErrorOnly(true),
 		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(n uint, err error) {
 			log.Debug().Msg(fmt.Sprintf("Retrying(%d): %v", n+1, err))

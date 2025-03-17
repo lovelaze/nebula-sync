@@ -4,27 +4,24 @@ import (
 	"fmt"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/rs/zerolog/log"
 )
 
-func (target *target) SelectiveSync(syncConf *config.Sync) error {
-	log.Info().Str("mode", "selective").Int("replicas", len(target.Replicas)).Msg("Running sync")
+func (target *target) SelectiveSync(conf *config.Sync) error {
+	return target.sync(func() error {
+		return target.selective(conf)
+	}, "selective")
+}
 
-	defer target.deleteSessions()
-
-	if err := target.authenticate(); err != nil {
-		return fmt.Errorf("authentication: %w", err)
+func (target *target) selective(conf *config.Sync) error {
+	if err := target.syncTeleporters(conf.GravitySettings); err != nil {
+		return fmt.Errorf("conf teleporters: %w", err)
 	}
 
-	if err := target.syncTeleporters(syncConf.GravitySettings); err != nil {
-		return fmt.Errorf("sync teleporters: %w", err)
+	if err := target.syncConfigs(conf.ConfigSettings); err != nil {
+		return fmt.Errorf("conf configs: %w", err)
 	}
 
-	if err := target.syncConfigs(syncConf.ConfigSettings); err != nil {
-		return fmt.Errorf("sync configs: %w", err)
-	}
-
-	if syncConf.RunGravity {
+	if conf.RunGravity {
 		if err := target.runGravity(); err != nil {
 			return fmt.Errorf("run gravity: %w", err)
 		}

@@ -42,7 +42,6 @@ func (target *target) sync(syncFunc func() error, mode string) (err error) {
 	}
 
 	return syncFunc()
-
 }
 
 func (target *target) authenticate() (err error) {
@@ -65,14 +64,14 @@ func (target *target) authenticate() (err error) {
 func (target *target) deleteSessions() {
 	log.Info().Msg("Invalidating sessions...")
 	if err := target.Primary.DeleteSession(); err != nil {
-		log.Warn().Msgf("Failed to close session for target : %s", target.Primary.String())
+		log.Warn().Msgf("Failed to invalidate session for target: %s", target.Primary.String())
 	}
 
 	for _, replica := range target.Replicas {
 		if err := retry.Fixed(func() error {
 			return replica.DeleteSession()
 		}, retry.AttemptsDeleteSession); err != nil {
-			log.Warn().Msgf("Failed to close session for target : %s", replica.String())
+			log.Warn().Msgf("Failed to invalidate session for target: %s", replica.String())
 		}
 	}
 }

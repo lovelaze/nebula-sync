@@ -49,7 +49,7 @@ func (service *Service) Run() error {
 	if service.conf.Sync.Cron != nil {
 		return service.startCron(func() {
 			if err := service.doSync(service.target); err != nil {
-				log.Error().Err(err).Msg("Sync failed")
+				log.Error().Msg("Sync failed")
 			}
 		})
 	}

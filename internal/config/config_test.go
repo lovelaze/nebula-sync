@@ -83,12 +83,14 @@ func TestConfig_LoadClient(t *testing.T) {
 
 	t.Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
 	t.Setenv("CLIENT_TIMEOUT_SECONDS", "45")
+	t.Setenv("CLIENT_RETRY_DELAY_SECONDS", "5")
 
 	err := conf.loadClient()
 	require.NoError(t, err)
 
 	assert.Equal(t, true, conf.Client.SkipSSLVerification)
-	assert.Equal(t, uint(45), conf.Client.Timeout)
+	assert.Equal(t, int64(45), conf.Client.Timeout)
+	assert.Equal(t, int64(5), conf.Client.RetryDelay)
 }
 
 func TestConfig_LoadEnvFile(t *testing.T) {
@@ -105,6 +107,7 @@ func TestConfig_LoadEnvFile(t *testing.T) {
 
 	assert.Equal(t, "true", os.Getenv("CLIENT_SKIP_TLS_VERIFICATION"))
 	assert.Equal(t, "40", os.Getenv("CLIENT_TIMEOUT_SECONDS"))
+	assert.Equal(t, "5", os.Getenv("CLIENT_RETRY_DELAY_SECONDS"))
 
 	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DNS"))
 	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DHCP"))

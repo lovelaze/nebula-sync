@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"github.com/rs/zerolog/log"
+)
+
 type AuthResponse struct {
 	Session struct {
 		Valid    bool   `json:"valid"`
@@ -57,4 +62,13 @@ type VersionResponse struct {
 
 type ConfigResponse struct {
 	Config map[string]interface{} `json:"config"`
+}
+
+func (c *ConfigResponse) Get(key string) map[string]interface{} {
+	value, exists := c.Config[key]
+	if !exists {
+		log.Warn().Msg(fmt.Sprintf("Missing key (%s) in config response", key))
+		return nil
+	}
+	return value.(map[string]interface{})
 }

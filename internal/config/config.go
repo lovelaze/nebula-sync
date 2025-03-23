@@ -1,15 +1,10 @@
 package config
 
 import (
-	"crypto/tls"
 	"fmt"
-	"net/http"
-	"time"
-
-	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/lovelaze/nebula-sync/internal/filter"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/rs/zerolog/log"
 )
 
 type Config struct {
@@ -19,10 +14,12 @@ type Config struct {
 	Sync     *Sync          `ignored:"true"`
 }
 
-type Client struct {
-	SkipSSLVerification bool  `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
-	RetryDelay          int64 `default:"1" envconfig:"CLIENT_RETRY_DELAY_SECONDS"`
-	Timeout             int64 `default:"20" envconfig:"CLIENT_TIMEOUT_SECONDS"`
+type Sync struct {
+	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
+	Cron            *string `envconfig:"CRON"`
+	RunGravity      bool    `default:"false" envconfig:"RUN_GRAVITY"`
+	GravitySettings *GravitySettings
+	ConfigSettings  *ConfigSettings `ignored:"true"`
 }
 
 type GravitySettings struct {
@@ -37,23 +34,126 @@ type GravitySettings struct {
 }
 
 type ConfigSettings struct {
-	DNS       bool `default:"false" envconfig:"SYNC_CONFIG_DNS"`
-	DHCP      bool `default:"false" envconfig:"SYNC_CONFIG_DHCP"`
-	NTP       bool `default:"false" envconfig:"SYNC_CONFIG_NTP"`
-	Resolver  bool `default:"false" envconfig:"SYNC_CONFIG_RESOLVER"`
-	Database  bool `default:"false" envconfig:"SYNC_CONFIG_DATABASE"`
-	Webserver bool `default:"false" ignored:"true"` // ignore for now
-	Files     bool `default:"false" ignored:"true"` // ignore for now
-	Misc      bool `default:"false" envconfig:"SYNC_CONFIG_MISC"`
-	Debug     bool `default:"false" envconfig:"SYNC_CONFIG_DEBUG"`
+	DNS       *ConfigSetting
+	DHCP      *ConfigSetting
+	NTP       *ConfigSetting
+	Resolver  *ConfigSetting
+	Database  *ConfigSetting
+	Webserver *ConfigSetting
+	Files     *ConfigSetting
+	Misc      *ConfigSetting
+	Debug     *ConfigSetting
 }
 
-type Sync struct {
-	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
-	Cron            *string `envconfig:"CRON"`
-	RunGravity      bool    `default:"false" envconfig:"RUN_GRAVITY"`
-	GravitySettings *GravitySettings
-	ConfigSettings  *ConfigSettings
+type RawConfigSettings struct {
+	DNS             bool     `default:"false" envconfig:"SYNC_CONFIG_DNS"`
+	DNSInclude      []string `envconfig:"SYNC_CONFIG_DNS_INCLUDE"`
+	DNSExclude      []string `envconfig:"SYNC_CONFIG_DNS_EXCLUDE"`
+	DHCP            bool     `default:"false" envconfig:"SYNC_CONFIG_DHCP"`
+	DHCPInclude     []string `envconfig:"SYNC_CONFIG_DHCP_INCLUDE"`
+	DHCPExclude     []string `envconfig:"SYNC_CONFIG_DHCP_EXCLUDE"`
+	NTP             bool     `default:"false" envconfig:"SYNC_CONFIG_NTP"`
+	NTPInclude      []string `envconfig:"SYNC_CONFIG_NTP_INCLUDE"`
+	NTPExclude      []string `envconfig:"SYNC_CONFIG_NTP_EXCLUDE"`
+	Resolver        bool     `default:"false" envconfig:"SYNC_CONFIG_RESOLVER"`
+	ResolverInclude []string `envconfig:"SYNC_CONFIG_RESOLVER_INCLUDE"`
+	ResolverExclude []string `envconfig:"SYNC_CONFIG_RESOLVER_EXCLUDE"`
+	Database        bool     `default:"false" envconfig:"SYNC_CONFIG_DATABASE"`
+	DatabaseInclude []string `envconfig:"SYNC_CONFIG_DATABASE_INCLUDE"`
+	DatabaseExclude []string `envconfig:"SYNC_CONFIG_DATABASE_EXCLUDE"`
+	Webserver       bool     `default:"false" ignored:"true"` // ignore for now
+	Files           bool     `default:"false" ignored:"true"` // ignore for now
+	Misc            bool     `default:"false" envconfig:"SYNC_CONFIG_MISC"`
+	MiscInclude     []string `envconfig:"SYNC_CONFIG_MISC_INCLUDE"`
+	MiscExclude     []string `envconfig:"SYNC_CONFIG_MISC_EXCLUDE"`
+	Debug           bool     `default:"false" envconfig:"SYNC_CONFIG_DEBUG"`
+	DebugInclude    []string `envconfig:"SYNC_CONFIG_DEBUG_INCLUDE"`
+	DebugExclude    []string `envconfig:"SYNC_CONFIG_DEBUG_EXCLUDE"`
+}
+
+func (raw *RawConfigSettings) Validate() error {
+	exclusive := func(name string, include, exclude []string) error {
+		if include != nil && exclude != nil {
+			return fmt.Errorf("%s: INCLUDE/EXCLUDE must be mutually exclusive", name)
+		}
+		return nil
+	}
+
+	if err := exclusive("dns", raw.DNSInclude, raw.DNSExclude); err != nil {
+		return err
+	}
+	if err := exclusive("dhcp", raw.DHCPInclude, raw.DHCPExclude); err != nil {
+		return err
+	}
+	if err := exclusive("ntp", raw.NTPInclude, raw.NTPExclude); err != nil {
+		return err
+	}
+	if err := exclusive("resolver", raw.ResolverInclude, raw.ResolverExclude); err != nil {
+		return err
+	}
+	if err := exclusive("database", raw.DatabaseInclude, raw.DatabaseExclude); err != nil {
+		return err
+	}
+	if err := exclusive("misc", raw.MiscInclude, raw.MiscExclude); err != nil {
+		return err
+	}
+	if err := exclusive("debug", raw.DebugInclude, raw.DebugExclude); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (raw *RawConfigSettings) Parse() (*ConfigSettings, error) {
+	if err := raw.Validate(); err != nil {
+		return nil, err
+	}
+
+	return &ConfigSettings{
+		DNS:       NewConfigSetting(raw.DNS, raw.DNSInclude, raw.DNSExclude),
+		DHCP:      NewConfigSetting(raw.DHCP, raw.DHCPInclude, raw.DHCPExclude),
+		NTP:       NewConfigSetting(raw.NTP, raw.NTPInclude, raw.NTPExclude),
+		Resolver:  NewConfigSetting(raw.Resolver, raw.ResolverInclude, raw.ResolverExclude),
+		Database:  NewConfigSetting(raw.Database, raw.DatabaseInclude, raw.DatabaseExclude),
+		Webserver: NewConfigSetting(raw.Webserver, nil, nil),
+		Files:     NewConfigSetting(raw.Files, nil, nil),
+		Misc:      NewConfigSetting(raw.Misc, raw.MiscInclude, raw.MiscExclude),
+		Debug:     NewConfigSetting(raw.Debug, raw.DebugInclude, raw.DebugExclude),
+	}, nil
+}
+
+type ConfigSetting struct {
+	Enabled bool
+	Filter  *ConfigFilter
+}
+
+type ConfigFilter struct {
+	Type filter.FilterType
+	Keys []string
+}
+
+func newConfigFilter(filterType filter.FilterType, keys []string) *ConfigFilter {
+	return &ConfigFilter{
+		Type: filterType,
+		Keys: keys,
+	}
+}
+
+func NewConfigSetting(enabled bool, included, excluded []string) *ConfigSetting {
+	var configFilter *ConfigFilter
+
+	if included != nil {
+		configFilter = newConfigFilter(filter.Include, included)
+	} else if excluded != nil {
+		configFilter = newConfigFilter(filter.Exclude, excluded)
+	} else {
+		configFilter = nil
+	}
+
+	return &ConfigSetting{
+		Enabled: enabled,
+		Filter:  configFilter,
+	}
 }
 
 func (c *Config) Load() error {
@@ -72,31 +172,34 @@ func (c *Config) Load() error {
 	return nil
 }
 
-func (c *Config) loadClient() error {
-	client := Client{}
-
-	if err := envconfig.Process("", &client); err != nil {
-		return fmt.Errorf("client env vars: %w", err)
-	}
-
-	c.Client = &client
-
-	return nil
-}
-
 func (c *Config) loadSync() error {
 	sync := Sync{}
 	if err := envconfig.Process("", &sync); err != nil {
 		return fmt.Errorf("sync env vars: %w", err)
 	}
 
+	if err := sync.loadConfigSettings(); err != nil {
+		return fmt.Errorf("load config settings: %w", err)
+	}
+
 	c.Sync = &sync
 	return nil
 }
 
-func LoadEnvFile(filename string) error {
-	log.Debug().Msgf("Loading env file: %s", filename)
-	return godotenv.Load(filename)
+func (sync *Sync) loadConfigSettings() error {
+	raw := RawConfigSettings{}
+
+	if err := envconfig.Process("", &raw); err != nil {
+		return fmt.Errorf("config settings env vars: %w", err)
+	}
+
+	configSettings, err := raw.Parse()
+	if err != nil {
+		return err
+	}
+
+	sync.ConfigSettings = configSettings
+	return nil
 }
 
 func (c *Config) String() string {
@@ -121,13 +224,4 @@ func (c *Config) String() string {
 	}
 
 	return fmt.Sprintf("primary=%s, replicas=%s, fullSync=%t, cron=%s, sync=%s", c.Primary.Url, replicas, c.Sync.FullSync, cron, sync)
-}
-
-func (settings *Client) NewHttpClient() *http.Client {
-	return &http.Client{
-		Timeout: time.Duration(settings.Timeout) * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: settings.SkipSSLVerification},
-		},
-	}
 }

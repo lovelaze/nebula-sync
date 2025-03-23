@@ -34,15 +34,15 @@ func (target *target) full(conf *config.Sync) error {
 
 func newFullSyncConfigSettings() *config.ConfigSettings {
 	return &config.ConfigSettings{
-		DNS:       true,
-		DHCP:      true,
-		NTP:       true,
-		Resolver:  true,
-		Database:  true,
-		Webserver: false,
-		Files:     false,
-		Misc:      true,
-		Debug:     true,
+		DNS:       config.NewConfigSetting(true, nil, nil),
+		DHCP:      config.NewConfigSetting(true, nil, nil),
+		NTP:       config.NewConfigSetting(true, nil, nil),
+		Resolver:  config.NewConfigSetting(true, nil, nil),
+		Database:  config.NewConfigSetting(true, nil, nil),
+		Webserver: config.NewConfigSetting(false, nil, nil),
+		Files:     config.NewConfigSetting(false, nil, nil),
+		Misc:      config.NewConfigSetting(true, nil, nil),
+		Debug:     config.NewConfigSetting(true, nil, nil),
 	}
 }
 

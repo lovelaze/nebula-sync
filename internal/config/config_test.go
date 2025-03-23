@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/lovelaze/nebula-sync/internal/filter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
 	"testing"
 )
 
@@ -60,13 +60,13 @@ func TestConfig_loadSync(t *testing.T) {
 	assert.NotNil(t, conf.Sync.ConfigSettings)
 	assert.NotNil(t, conf.Sync.GravitySettings)
 
-	assert.True(t, conf.Sync.ConfigSettings.DNS)
-	assert.True(t, conf.Sync.ConfigSettings.DHCP)
-	assert.True(t, conf.Sync.ConfigSettings.NTP)
-	assert.True(t, conf.Sync.ConfigSettings.Resolver)
-	assert.True(t, conf.Sync.ConfigSettings.Database)
-	assert.True(t, conf.Sync.ConfigSettings.Misc)
-	assert.True(t, conf.Sync.ConfigSettings.Debug)
+	assert.True(t, conf.Sync.ConfigSettings.DNS.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.DHCP.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.NTP.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.Resolver.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.Database.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.Misc.Enabled)
+	assert.True(t, conf.Sync.ConfigSettings.Debug.Enabled)
 
 	assert.True(t, conf.Sync.GravitySettings.DHCPLeases)
 	assert.True(t, conf.Sync.GravitySettings.Group)
@@ -78,63 +78,113 @@ func TestConfig_loadSync(t *testing.T) {
 	assert.True(t, conf.Sync.GravitySettings.ClientByGroup)
 }
 
-func TestConfig_LoadClient(t *testing.T) {
-	conf := Config{}
-
-	t.Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
-	t.Setenv("CLIENT_TIMEOUT_SECONDS", "45")
-	t.Setenv("CLIENT_RETRY_DELAY_SECONDS", "5")
-
-	err := conf.loadClient()
-	require.NoError(t, err)
-
-	assert.Equal(t, true, conf.Client.SkipSSLVerification)
-	assert.Equal(t, int64(45), conf.Client.Timeout)
-	assert.Equal(t, int64(5), conf.Client.RetryDelay)
+func TestRawConfig_Validate_Both(t *testing.T) {
+	settings := RawConfigSettings{
+		DNSInclude: []string{"a"},
+		DNSExclude: []string{"b"},
+	}
+	assert.Error(t, settings.Validate())
 }
 
-func TestConfig_LoadEnvFile(t *testing.T) {
-	os.Clearenv()
-	err := LoadEnvFile("../../testdata/.env")
-
-	require.NoError(t, err)
-
-	assert.Equal(t, "https://ph1.example.com|password", os.Getenv("PRIMARY"))
-	assert.Equal(t, "https://ph2.example.com|password", os.Getenv("REPLICAS"))
-	assert.Equal(t, "false", os.Getenv("FULL_SYNC"))
-	assert.Equal(t, "* * * * *", os.Getenv("CRON"))
-	assert.Equal(t, "Europe/London", os.Getenv("TZ"))
-
-	assert.Equal(t, "true", os.Getenv("CLIENT_SKIP_TLS_VERIFICATION"))
-	assert.Equal(t, "40", os.Getenv("CLIENT_TIMEOUT_SECONDS"))
-	assert.Equal(t, "5", os.Getenv("CLIENT_RETRY_DELAY_SECONDS"))
-
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DNS"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DHCP"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_NTP"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_RESOLVER"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DATABASE"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_MISC"))
-	assert.Equal(t, "true", os.Getenv("SYNC_CONFIG_DEBUG"))
-
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_DHCP_LEASES"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_GROUP"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_AD_LIST"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_AD_LIST_BY_GROUP"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_DOMAIN_LIST"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_CLIENT"))
-	assert.Equal(t, "true", os.Getenv("SYNC_GRAVITY_CLIENT_BY_GROUP"))
-
-	os.Clearenv()
+func TestRawConfig_Validate_Single(t *testing.T) {
+	include := RawConfigSettings{
+		DNSInclude: []string{"a"},
+		DNSExclude: nil,
+	}
+	exclude := RawConfigSettings{
+		DNSInclude: nil,
+		DNSExclude: []string{"a"},
+	}
+	assert.NoError(t, include.Validate())
+	assert.NoError(t, exclude.Validate())
 }
 
-func TestConfig_LoadEnvFile_precedence(t *testing.T) {
-	assert.Empty(t, os.Getenv("CRON"))
-	t.Setenv("CRON", "0 0 * * *")
+func TestRawConfig_Validate_None(t *testing.T) {
+	settings := RawConfigSettings{
+		DNSInclude: nil,
+		DNSExclude: nil,
+	}
+	assert.NoError(t, settings.Validate())
+}
 
-	err := LoadEnvFile("../../testdata/.env")
-	require.NoError(t, err)
+func TestRawConfig_Parse_Include(t *testing.T) {
+	t.Setenv("SYNC_CONFIG_DNS_INCLUDE", "key1,key2")
+	t.Setenv("SYNC_CONFIG_DHCP_INCLUDE", "key3,key4")
+	t.Setenv("SYNC_CONFIG_NTP_INCLUDE", "key5,key6")
+	t.Setenv("SYNC_CONFIG_RESOLVER_INCLUDE", "key7,key8")
+	t.Setenv("SYNC_CONFIG_DATABASE_INCLUDE", "key9,key10")
+	t.Setenv("SYNC_CONFIG_MISC_INCLUDE", "key11,key12")
+	t.Setenv("SYNC_CONFIG_DEBUG_INCLUDE", "key13,key14")
 
-	assert.Equal(t, "0 0 * * *", os.Getenv("CRON"))
+	sync := Sync{}
+	assert.NoError(t, sync.loadConfigSettings())
+
+	settings := sync.ConfigSettings
+
+	assert.Equal(t, settings.DNS.Filter.Type, filter.Include)
+	assert.Equal(t, settings.DNS.Filter.Keys, []string{"key1", "key2"})
+	assert.Equal(t, settings.DHCP.Filter.Type, filter.Include)
+	assert.Equal(t, settings.DHCP.Filter.Keys, []string{"key3", "key4"})
+	assert.Equal(t, settings.NTP.Filter.Type, filter.Include)
+	assert.Equal(t, settings.NTP.Filter.Keys, []string{"key5", "key6"})
+	assert.Equal(t, settings.Resolver.Filter.Type, filter.Include)
+	assert.Equal(t, settings.Resolver.Filter.Keys, []string{"key7", "key8"})
+	assert.Equal(t, settings.Database.Filter.Type, filter.Include)
+	assert.Equal(t, settings.Database.Filter.Keys, []string{"key9", "key10"})
+	assert.Equal(t, settings.Misc.Filter.Type, filter.Include)
+	assert.Equal(t, settings.Misc.Filter.Keys, []string{"key11", "key12"})
+	assert.Equal(t, settings.Debug.Filter.Type, filter.Include)
+	assert.Equal(t, settings.Debug.Filter.Keys, []string{"key13", "key14"})
+}
+
+func TestRawConfig_Parse_Exclude(t *testing.T) {
+	t.Setenv("SYNC_CONFIG_DNS_EXCLUDE", "key1,key2")
+	t.Setenv("SYNC_CONFIG_DHCP_EXCLUDE", "key3,key4")
+	t.Setenv("SYNC_CONFIG_NTP_EXCLUDE", "key5,key6")
+	t.Setenv("SYNC_CONFIG_RESOLVER_EXCLUDE", "key7,key8")
+	t.Setenv("SYNC_CONFIG_DATABASE_EXCLUDE", "key9,key10")
+	t.Setenv("SYNC_CONFIG_MISC_EXCLUDE", "key11,key12")
+	t.Setenv("SYNC_CONFIG_DEBUG_EXCLUDE", "key13,key14")
+
+	sync := Sync{}
+	assert.NoError(t, sync.loadConfigSettings())
+
+	settings := sync.ConfigSettings
+
+	assert.Equal(t, settings.DNS.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.DNS.Filter.Keys, []string{"key1", "key2"})
+	assert.Equal(t, settings.DHCP.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.DHCP.Filter.Keys, []string{"key3", "key4"})
+	assert.Equal(t, settings.NTP.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.NTP.Filter.Keys, []string{"key5", "key6"})
+	assert.Equal(t, settings.Resolver.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.Resolver.Filter.Keys, []string{"key7", "key8"})
+	assert.Equal(t, settings.Database.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.Database.Filter.Keys, []string{"key9", "key10"})
+	assert.Equal(t, settings.Misc.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.Misc.Filter.Keys, []string{"key11", "key12"})
+	assert.Equal(t, settings.Debug.Filter.Type, filter.Exclude)
+	assert.Equal(t, settings.Debug.Filter.Keys, []string{"key13", "key14"})
+}
+
+func TestConfig_NewConfigSetting(t *testing.T) {
+	enabled := NewConfigSetting(true, nil, nil)
+	assert.True(t, enabled.Enabled)
+	assert.Nil(t, enabled.Filter)
+
+	disabled := NewConfigSetting(false, nil, nil)
+	assert.False(t, disabled.Enabled)
+	assert.Nil(t, disabled.Filter)
+
+	include := NewConfigSetting(true, []string{"key1", "key2"}, nil)
+	assert.True(t, include.Enabled)
+	assert.NotNil(t, include.Filter)
+	assert.Equal(t, include.Filter.Type, filter.Include)
+	assert.Equal(t, include.Filter.Keys, []string{"key1", "key2"})
+
+	exclude := NewConfigSetting(true, nil, []string{"key1", "key2"})
+	assert.True(t, exclude.Enabled)
+	assert.NotNil(t, exclude.Filter)
+	assert.Equal(t, exclude.Filter.Type, filter.Exclude)
+	assert.Equal(t, exclude.Filter.Keys, []string{"key1", "key2"})
 }

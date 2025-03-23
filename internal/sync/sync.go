@@ -3,6 +3,7 @@ package sync
 import (
 	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
+	"github.com/lovelaze/nebula-sync/internal/filter"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/lovelaze/nebula-sync/internal/retry"
@@ -140,29 +141,46 @@ func (target *target) runGravity() error {
 func createPatchConfigRequest(config *config.ConfigSettings, configResponse *model.ConfigResponse) *model.PatchConfigRequest {
 	patchConfig := model.PatchConfig{}
 
-	if config.DNS {
-		patchConfig.DNS = configResponse.Config["dns"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.DNS, configResponse.Get("dns")); json != nil {
+		patchConfig.DNS = json
 	}
-	if config.DHCP {
-		patchConfig.DHCP = configResponse.Config["dhcp"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.DHCP, configResponse.Get("dhcp")); json != nil {
+		patchConfig.DHCP = json
 	}
-	if config.NTP {
-		patchConfig.NTP = configResponse.Config["ntp"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.NTP, configResponse.Get("ntp")); json != nil {
+		patchConfig.NTP = json
 	}
-	if config.Resolver {
-		patchConfig.Resolver = configResponse.Config["resolver"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.Resolver, configResponse.Get("resolver")); json != nil {
+		patchConfig.Resolver = json
 	}
-	if config.Database {
-		patchConfig.Database = configResponse.Config["database"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.Database, configResponse.Get("database")); json != nil {
+		patchConfig.Database = json
 	}
-	if config.Misc {
-		patchConfig.Misc = configResponse.Config["misc"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.Misc, configResponse.Get("misc")); json != nil {
+		patchConfig.Misc = json
 	}
-	if config.Debug {
-		patchConfig.Debug = configResponse.Config["debug"].(map[string]interface{})
+	if json := filterPatchConfigRequest(config.Debug, configResponse.Get("debug")); json != nil {
+		patchConfig.Debug = json
 	}
 
 	return &model.PatchConfigRequest{Config: patchConfig}
+}
+
+func filterPatchConfigRequest(setting *config.ConfigSetting, json map[string]interface{}) map[string]interface{} {
+	if !setting.Enabled {
+		return nil
+	}
+
+	if setting.Filter != nil {
+		filteredJson, err := filter.ByType(setting.Filter.Type, setting.Filter.Keys, json)
+		if err != nil {
+			log.Warn().Err(err).Msg("Unable to filter json object")
+			return nil
+		}
+		return filteredJson
+	}
+
+	return json
 }
 
 func createPostTeleporterRequest(gravity *config.GravitySettings) *model.PostTeleporterRequest {

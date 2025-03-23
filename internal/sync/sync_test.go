@@ -101,22 +101,22 @@ func Test_target_syncConfigs(t *testing.T) {
 		Client:   mockClient,
 	}
 
-	configResponse := model.ConfigResponse{Config: make(map[string]interface{})}
+	configResponse := emptyConfigResponse()
 
 	gravitySettings := config.ConfigSettings{
-		DNS:       false,
-		DHCP:      false,
-		NTP:       false,
-		Resolver:  false,
-		Database:  false,
-		Webserver: false,
-		Files:     false,
-		Misc:      false,
-		Debug:     false,
+		DNS:       config.NewConfigSetting(false, nil, nil),
+		DHCP:      config.NewConfigSetting(false, nil, nil),
+		NTP:       config.NewConfigSetting(false, nil, nil),
+		Resolver:  config.NewConfigSetting(false, nil, nil),
+		Database:  config.NewConfigSetting(false, nil, nil),
+		Webserver: config.NewConfigSetting(false, nil, nil),
+		Files:     config.NewConfigSetting(false, nil, nil),
+		Misc:      config.NewConfigSetting(false, nil, nil),
+		Debug:     config.NewConfigSetting(false, nil, nil),
 	}
 
-	primary.EXPECT().GetConfig().Once().Return(&configResponse, nil)
-	replica.EXPECT().PatchConfig(createPatchConfigRequest(&gravitySettings, &configResponse)).Once().Return(nil)
+	primary.EXPECT().GetConfig().Once().Return(configResponse, nil)
+	replica.EXPECT().PatchConfig(createPatchConfigRequest(&gravitySettings, configResponse)).Once().Return(nil)
 
 	err := target.syncConfigs(&gravitySettings)
 	assert.NoError(t, err)
@@ -142,6 +142,26 @@ func Test_target_runGravity(t *testing.T) {
 
 	err := target.runGravity()
 	assert.NoError(t, err)
+}
+
+func Test_filterPatchConfigRequest_enabled(t *testing.T) {
+	dns := emptyConfigResponse().Get("dns")
+
+	request := filterPatchConfigRequest(&config.ConfigSetting{
+		Enabled: true,
+		Filter:  nil,
+	}, dns)
+	assert.Equal(t, dns, request)
+}
+
+func Test_filterPatchConfigRequest_disabled(t *testing.T) {
+	dns := emptyConfigResponse().Get("dns")
+
+	request := filterPatchConfigRequest(&config.ConfigSetting{
+		Enabled: false,
+		Filter:  nil,
+	}, dns)
+	assert.Nil(t, request)
 }
 
 func emptyConfigResponse() *model.ConfigResponse {

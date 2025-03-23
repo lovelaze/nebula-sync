@@ -1,0 +1,60 @@
+{
+  "upstreams": [
+    "8.8.8.8",
+    "8.8.4.4"
+  ],
+  "CNAMEdeepInspect": true,
+  "blockESNI": true,
+  "EDNS0ECS": true,
+  "ignoreLocalhost": false,
+  "showDNSSEC": true,
+  "analyzeOnlyAandAAAA": false,
+  "piholePTR": "PI.HOLE",
+  "replyWhenBusy": "ALLOW",
+  "blockTTL": 2,
+  "hosts": [],
+  "domainNeeded": false,
+  "expandHosts": false,
+  "domain": "lan",
+  "bogusPriv": true,
+  "dnssec": false,
+  "interface": "",
+  "hostRecord": "",
+  "listeningMode": "LOCAL",
+  "queryLogging": true,
+  "cnameRecords": [],
+  "port": 53,
+  "revServers": [],
+  "cache": {
+    "size": 10000,
+    "optimizer": 3600,
+    "upstreamBlockedTTL": 86401
+  },
+  "blocking": {
+    "active": true,
+    "mode": "NULL",
+    "edns": "TEXT"
+  },
+  "specialDomains": {
+    "mozillaCanary": true,
+    "iCloudPrivateRelay": true
+  },
+  "reply": {
+    "host": {
+      "force4": false,
+      "IPv4": "",
+      "force6": false,
+      "IPv6": ""
+    },
+    "blocking": {
+      "force4": false,
+      "IPv4": "",
+      "force6": false,
+      "IPv6": ""
+    }
+  },
+  "rateLimit": {
+    "count": 1000,
+    "interval": 60
+  }
+}

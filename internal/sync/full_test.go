@@ -55,12 +55,12 @@ func Test_newFullSyncConfigSettings(t *testing.T) {
 func Test_newFullSyncGravitySettings(t *testing.T) {
 	configSettings := newFullSyncConfigSettings()
 
-	assert.True(t, configSettings.DNS)
-	assert.True(t, configSettings.DHCP)
-	assert.True(t, configSettings.NTP)
-	assert.True(t, configSettings.Database)
-	assert.False(t, configSettings.Webserver)
-	assert.False(t, configSettings.Files)
-	assert.True(t, configSettings.Misc)
-	assert.True(t, configSettings.Debug)
+	assert.True(t, configSettings.DNS.Enabled)
+	assert.True(t, configSettings.DHCP.Enabled)
+	assert.True(t, configSettings.NTP.Enabled)
+	assert.True(t, configSettings.Database.Enabled)
+	assert.False(t, configSettings.Webserver.Enabled)
+	assert.False(t, configSettings.Files.Enabled)
+	assert.True(t, configSettings.Misc.Enabled)
+	assert.True(t, configSettings.Debug.Enabled)
 }

@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/lovelaze/nebula-sync/internal/filter"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"github.com/lovelaze/nebula-sync/internal/sync/filter"
 )
 
 type Config struct {
@@ -128,11 +128,11 @@ type ConfigSetting struct {
 }
 
 type ConfigFilter struct {
-	Type filter.FilterType
+	Type filter.Type
 	Keys []string
 }
 
-func newConfigFilter(filterType filter.FilterType, keys []string) *ConfigFilter {
+func newConfigFilter(filterType filter.Type, keys []string) *ConfigFilter {
 	return &ConfigFilter{
 		Type: filterType,
 		Keys: keys,
@@ -203,25 +203,25 @@ func (sync *Sync) loadConfigSettings() error {
 }
 
 func (c *Config) String() string {
-	replicas := make([]string, len(c.Replicas))
-	for _, replica := range c.Replicas {
-		replicas = append(replicas, replica.Url.String())
-	}
+	return fmt.Sprintf("%+v", *c)
+}
 
-	cron := ""
-	if c.Sync.Cron != nil {
-		cron = *c.Sync.Cron
-	}
+func (s *Sync) String() string {
+	return fmt.Sprintf("%+v", *s)
+}
 
-	sync := ""
-	if c.Sync != nil {
-		if mc := c.Sync.ConfigSettings; mc != nil {
-			sync += fmt.Sprintf("config=%+v", *mc)
-		}
-		if gc := c.Sync.GravitySettings; gc != nil {
-			sync += fmt.Sprintf(", gravity=%+v", *gc)
-		}
-	}
+func (gs *GravitySettings) String() string {
+	return fmt.Sprintf("%+v", *gs)
+}
 
-	return fmt.Sprintf("primary=%s, replicas=%s, fullSync=%t, cron=%s, sync=%s", c.Primary.Url, replicas, c.Sync.FullSync, cron, sync)
+func (cs *ConfigSettings) String() string {
+	return fmt.Sprintf("%+v", *cs)
+}
+
+func (cs *ConfigSetting) String() string {
+	return fmt.Sprintf("%+v", *cs)
+}
+
+func (cs *ConfigFilter) String() string {
+	return fmt.Sprintf("%+v", *cs)
 }

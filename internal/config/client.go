@@ -34,3 +34,7 @@ func (settings *Client) NewHttpClient() *http.Client {
 		},
 	}
 }
+
+func (c *Client) String() string {
+	return fmt.Sprintf("%+v", *c)
+}

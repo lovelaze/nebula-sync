@@ -3,10 +3,10 @@ package sync
 import (
 	"fmt"
 	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/lovelaze/nebula-sync/internal/filter"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/lovelaze/nebula-sync/internal/retry"
+	"github.com/lovelaze/nebula-sync/internal/sync/filter"
+	"github.com/lovelaze/nebula-sync/internal/sync/retry"
 	"github.com/rs/zerolog/log"
 )
 

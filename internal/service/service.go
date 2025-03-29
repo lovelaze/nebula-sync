@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/lovelaze/nebula-sync/internal/retry"
+	"github.com/lovelaze/nebula-sync/internal/sync/retry"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"

@@ -61,7 +61,7 @@ func TestFilter_ByType_MultipleNested(t *testing.T) {
 }
 
 func loadDnsData() map[string]interface{} {
-	file, err := os.ReadFile("../../testdata/dns.json")
+	file, err := os.ReadFile("../../../testdata/dns.json")
 	if err != nil {
 		panic("failed to read testdata")
 	}

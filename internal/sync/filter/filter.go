@@ -6,14 +6,25 @@ import (
 	"strings"
 )
 
-type FilterType int
+type Type int
 
 const (
-	Include FilterType = iota
+	Include Type = iota
 	Exclude
 )
 
-func ByType(filter FilterType, keys []string, json map[string]interface{}) (map[string]interface{}, error) {
+func (ft Type) String() string {
+	var s string
+	switch ft {
+	case Include:
+		s = "Include"
+	case Exclude:
+		s = "Exclude"
+	}
+	return s
+}
+
+func ByType(filter Type, keys []string, json map[string]interface{}) (map[string]interface{}, error) {
 	switch filter {
 	case Include:
 		return includeKeys(json, keys), nil

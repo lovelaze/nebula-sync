@@ -12,6 +12,10 @@ type PiHole struct {
 	Password string
 }
 
+func (ph PiHole) String() string {
+	return fmt.Sprintf("{Url:%s}", ph.Url)
+}
+
 func NewPiHole(host, password string) PiHole {
 	u, err := url.Parse(host)
 	if err != nil {

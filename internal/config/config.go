@@ -157,8 +157,8 @@ func NewConfigSetting(enabled bool, included, excluded []string) *ConfigSetting 
 }
 
 func (c *Config) Load() error {
-	if err := envconfig.Process("", c); err != nil {
-		return fmt.Errorf("env vars: %w", err)
+	if err := c.loadTargets(); err != nil {
+		return err
 	}
 
 	if err := c.loadClient(); err != nil {

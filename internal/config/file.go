@@ -6,6 +6,6 @@ import (
 )
 
 func LoadEnvFile(filename string) error {
-	log.Debug().Msgf("Loading env file: %s", filename)
+	log.Debug().Msgf("Loading envs from file: %s", filename)
 	return godotenv.Load(filename)
 }

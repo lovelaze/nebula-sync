@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	SkipSSLVerification bool  `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
+	SkipTLSVerification bool  `default:"false" envconfig:"CLIENT_SKIP_TLS_VERIFICATION"`
 	RetryDelay          int64 `default:"1" envconfig:"CLIENT_RETRY_DELAY_SECONDS"`
 	Timeout             int64 `default:"20" envconfig:"CLIENT_TIMEOUT_SECONDS"`
 }
@@ -30,7 +30,7 @@ func (settings *Client) NewHttpClient() *http.Client {
 	return &http.Client{
 		Timeout: time.Duration(settings.Timeout) * time.Second,
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: settings.SkipSSLVerification},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: settings.SkipTLSVerification},
 		},
 	}
 }

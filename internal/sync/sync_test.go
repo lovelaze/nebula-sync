@@ -15,7 +15,7 @@ func Test_target_authenticate(t *testing.T) {
 	replica := piholemock.NewClient(t)
 
 	mockClient := &config.Client{
-		SkipSSLVerification: false,
+		SkipTLSVerification: false,
 		RetryDelay:          1,
 	}
 
@@ -37,7 +37,7 @@ func Test_target_deleteSessions(t *testing.T) {
 	replica := piholemock.NewClient(t)
 
 	mockClient := &config.Client{
-		SkipSSLVerification: false,
+		SkipTLSVerification: false,
 		RetryDelay:          1,
 	}
 
@@ -58,7 +58,7 @@ func Test_target_syncTeleporters(t *testing.T) {
 	replica := piholemock.NewClient(t)
 
 	mockClient := &config.Client{
-		SkipSSLVerification: false,
+		SkipTLSVerification: false,
 		RetryDelay:          1,
 	}
 
@@ -91,7 +91,7 @@ func Test_target_syncConfigs(t *testing.T) {
 	replica := piholemock.NewClient(t)
 
 	mockClient := &config.Client{
-		SkipSSLVerification: false,
+		SkipTLSVerification: false,
 		RetryDelay:          1,
 	}
 
@@ -127,7 +127,7 @@ func Test_target_runGravity(t *testing.T) {
 	replica := piholemock.NewClient(t)
 
 	mockClient := &config.Client{
-		SkipSSLVerification: false,
+		SkipTLSVerification: false,
 		RetryDelay:          1,
 	}
 

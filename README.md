@@ -84,7 +84,7 @@ The following environment variables can be specified:
 | `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
 | `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
-| `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips SSL certificate verification                 |
+| `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips TLS certificate verification                 |
 | `CLIENT_RETRY_DELAY_SECONDS`       | 1       | 5               | Seconds to delay between connection attempts       |
 | `CLIENT_TIMEOUT_SECONDS`           | 20      | 60              | Http client timeout in seconds                     |
 

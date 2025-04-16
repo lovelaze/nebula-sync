@@ -77,6 +77,8 @@ The following environment variables can be specified:
 
 > **Note:** When `FULL_SYNC=true`, the system will perform a full Teleporter import/export from the primary Pi-hole to the replicas. This will synchronize all settings and configurations.
 
+> **Docker secrets:** `PRIMARY` and `REPLICAS` environment variables support Docker secrets when defined as `PRIMARY_FILE` and `REPLICAS_FILE`. See note regarding default user and Docker secrets example below.
+
 ### Optional Environment Variables
 
 | Name                               | Default | Example         | Description                                        |
@@ -131,6 +133,10 @@ Config keys are relative to the section and are **case sensitive**. For example,
 | `SYNC_CONFIG_DEBUG_INCLUDE`       | database,networking        | Debug config keys to include                   |
 | `SYNC_CONFIG_DEBUG_EXCLUDE`       | database,networking        | Debug config keys to exclude                   |
 
+## Notes
+
+### Default user of Docker container / Docker secrets example
+By default, the Docker container runs as user `1001`. If you are using Docker secrets, the user that is running the container will need read permissions to the files that the Docker secrets reference. If the user does not have the right permissions you will receive an error `Failed to initialize service error="open /run/secrets/primary: permission denied"`. To avoid this error, either make sure to `chown 1001 ./your/secretfiles && chmod 400 ./your/secretfiles` or use the [`user` directive in Docker Compose](https://docs.docker.com/reference/compose-file/services/#user) to change the user that the container runs as to a user of your choice - and then make sure to update your secret files' ownership to that user. In the example [docker-compose-with-secrets.yml](examples/docker-compose-with-secrets.yml), user `1234` owns `./secrets/primary.txt` and `./secrets/replicas.txt` and both have `-r--------` permissions.
 
 
 ## Disclaimer

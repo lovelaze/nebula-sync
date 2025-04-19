@@ -309,6 +309,8 @@ linters:
           disabled: true
         - name: flag-parameter
           disabled: true
+        - name: deep-exit
+          disabled: true
 
     gosec:
       excludes:

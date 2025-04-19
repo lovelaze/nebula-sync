@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Primary  model.PiHole   `required:"true" envconfig:"PRIMARY"`
-	Replicas []model.PiHole `required:"true" envconfig:"REPLICAS"`
-	Client   *Client        `                                     ignored:"true"`
-	Sync     *Sync          `                                     ignored:"true"`
+	Primary  model.PiHole   `ignored:"true" required:"true" envconfig:"PRIMARY"`
+	Replicas []model.PiHole `ignored:"true" required:"true" envconfig:"REPLICAS"`
+	Client   *Client        `ignored:"true"`
+	Sync     *Sync          `ignored:"true"`
+	API      *API           `                               envconfig:"API"`
 }
 
 type Sync struct {
@@ -158,6 +159,10 @@ func NewConfigSetting(enabled bool, included, excluded []string) *ConfigSetting 
 }
 
 func (c *Config) Load() error {
+	if err := envconfig.Process("", c); err != nil {
+		return err
+	}
+
 	if err := c.loadTargets(); err != nil {
 		return err
 	}
@@ -209,6 +214,10 @@ func (c *Config) String() string {
 
 func (s *Sync) String() string {
 	return fmt.Sprintf("%+v", *s)
+}
+
+func (a *API) String() string {
+	return fmt.Sprintf("%+v", *a)
 }
 
 func (gs *GravitySettings) String() string {

@@ -28,5 +28,10 @@ COPY --link --from=golang /app/nebula-sync /usr/local/bin/
 
 USER 1001
 
+ENV API_ENABLED=true
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=3s --retries=3 \
+  CMD ["nebula-sync", "healthcheck"]
+
 ENTRYPOINT ["nebula-sync"]
 CMD ["run"]

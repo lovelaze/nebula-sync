@@ -3,6 +3,7 @@ package filter
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"maps"
 	"os"
 	"slices"
@@ -11,10 +12,11 @@ import (
 
 func TestFilter_ByType_Include(t *testing.T) {
 	filterKeys := []string{"cache", "upstreams", "interface"}
-	data := loadDnsData()
+	data := loadDNSData()
 	result, err := ByType(Include, filterKeys, data)
-	assert.NoError(t, err)
-	assert.Equal(t, len(result), len(filterKeys))
+	require.NoError(t, err)
+	assert.Len(t, filterKeys, 3)
+	assert.Len(t, result, 3)
 
 	for key := range maps.Keys(data) {
 		if slices.Contains(filterKeys, key) {
@@ -28,9 +30,9 @@ func TestFilter_ByType_Include(t *testing.T) {
 
 func TestFilter_ByType_Exclude(t *testing.T) {
 	filterKeys := []string{"cache", "upstreams", "interface"}
-	data := loadDnsData()
+	data := loadDNSData()
 	result, err := ByType(Exclude, filterKeys, data)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, len(result), len(data)-len(filterKeys))
 
 	for key := range maps.Keys(data) {
@@ -45,28 +47,31 @@ func TestFilter_ByType_Exclude(t *testing.T) {
 
 func TestFilter_ByType_MultipleNested(t *testing.T) {
 	filterKeys := []string{"reply.host.force4", "reply.host.IPv4", "reply.blocking.force4"}
-	data := loadDnsData()
+	data := loadDNSData()
 	result, err := ByType(Include, filterKeys, data)
-	assert.NoError(t, err)
-	assert.Equal(t, len(result), 1)
+	require.NoError(t, err)
+	assert.Len(t, result, 1)
 
-	reply := result["reply"].(map[string]interface{})
-	host := reply["host"].(map[string]interface{})
-	blocking := reply["blocking"].(map[string]interface{})
+	reply, ok := result["reply"].(map[string]any)
+	assert.True(t, ok)
+	host, ok := reply["host"].(map[string]any)
+	assert.True(t, ok)
+	blocking, ok := reply["blocking"].(map[string]any)
+	assert.True(t, ok)
 
-	assert.Equal(t, len(reply), 2)
-	assert.Equal(t, len(host), 2)
-	assert.Equal(t, len(blocking), 1)
-	assert.NotEqual(t, data["reply"].(map[string]interface{}), reply)
+	assert.Len(t, reply, 2)
+	assert.Len(t, host, 2)
+	assert.Len(t, blocking, 1)
+	assert.NotEqual(t, data["reply"].(map[string]any), reply)
 }
 
-func loadDnsData() map[string]interface{} {
+func loadDNSData() map[string]any {
 	file, err := os.ReadFile("../../../testdata/dns.json")
 	if err != nil {
 		panic("failed to read testdata")
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(file, &data); err != nil {
 		panic("failed to unmarshal testdata")
 	}
@@ -75,9 +80,9 @@ func loadDnsData() map[string]interface{} {
 }
 
 func TestFilter_IncludeKeys(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": 1,
-		"b": map[string]interface{}{"c": 2, "d": 3},
+		"b": map[string]any{"c": 2, "d": 3},
 		"e": 4,
 	}
 
@@ -85,14 +90,14 @@ func TestFilter_IncludeKeys(t *testing.T) {
 	result := includeKeys(data, keys)
 
 	assert.Equal(t, 1, result["a"])
-	assert.Equal(t, 2, result["b"].(map[string]interface{})["c"])
-	assert.Equal(t, nil, result["b"].(map[string]interface{})["d"])
+	assert.Equal(t, 2, result["b"].(map[string]any)["c"])
+	assert.Nil(t, result["b"].(map[string]any)["d"])
 	assert.Equal(t, 4, result["e"])
 	assert.Len(t, result, 3)
 }
 
 func TestFilter_IncludeKeys_MissingKey(t *testing.T) {
-	data := map[string]interface{}{"a": 1}
+	data := map[string]any{"a": 1}
 	keys := []string{"b"}
 	result := includeKeys(data, keys)
 
@@ -100,9 +105,9 @@ func TestFilter_IncludeKeys_MissingKey(t *testing.T) {
 }
 
 func TestFilter_ExcludeKeys(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": 1,
-		"b": map[string]interface{}{"c": 2, "d": 3},
+		"b": map[string]any{"c": 2, "d": 3},
 		"e": 4,
 	}
 
@@ -110,13 +115,13 @@ func TestFilter_ExcludeKeys(t *testing.T) {
 	result := excludeKeys(data, keys)
 
 	assert.NotContains(t, result, "a")
-	assert.NotContains(t, result["b"].(map[string]interface{}), "c")
-	assert.Contains(t, result["b"].(map[string]interface{}), "d")
+	assert.NotContains(t, result["b"].(map[string]any), "c")
+	assert.Contains(t, result["b"].(map[string]any), "d")
 	assert.Contains(t, result, "e")
 }
 
 func TestFilter_ExcludeKeys_NonExistentKey(t *testing.T) {
-	data := map[string]interface{}{"a": 1}
+	data := map[string]any{"a": 1}
 	keys := []string{"b"}
 	result := excludeKeys(data, keys)
 

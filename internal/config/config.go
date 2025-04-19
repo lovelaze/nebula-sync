@@ -99,11 +99,8 @@ func (raw *RawConfigSettings) Validate() error {
 	if err := exclusive("misc", raw.MiscInclude, raw.MiscExclude); err != nil {
 		return err
 	}
-	if err := exclusive("debug", raw.DebugInclude, raw.DebugExclude); err != nil {
-		return err
-	}
 
-	return nil
+	return exclusive("debug", raw.DebugInclude, raw.DebugExclude)
 }
 
 func (raw *RawConfigSettings) Parse() (*ConfigSettings, error) {
@@ -144,11 +141,12 @@ func newConfigFilter(filterType filter.Type, keys []string) *ConfigFilter {
 func NewConfigSetting(enabled bool, included, excluded []string) *ConfigSetting {
 	var configFilter *ConfigFilter
 
-	if included != nil {
+	switch {
+	case included != nil:
 		configFilter = newConfigFilter(filter.Include, included)
-	} else if excluded != nil {
+	case excluded != nil:
 		configFilter = newConfigFilter(filter.Exclude, excluded)
-	} else {
+	default:
 		configFilter = nil
 	}
 
@@ -171,11 +169,7 @@ func (c *Config) Load() error {
 		return err
 	}
 
-	if err := c.loadWebhookSettings(); err != nil {
-		return err
-	}
-
-	return nil
+	return c.loadWebhookSettings()
 }
 
 func (c *Config) loadSync() error {
@@ -192,7 +186,7 @@ func (c *Config) loadSync() error {
 	return nil
 }
 
-func (sync *Sync) loadConfigSettings() error {
+func (s *Sync) loadConfigSettings() error {
 	raw := RawConfigSettings{}
 
 	if err := envconfig.Process("", &raw); err != nil {
@@ -204,7 +198,7 @@ func (sync *Sync) loadConfigSettings() error {
 		return err
 	}
 
-	sync.ConfigSettings = configSettings
+	s.ConfigSettings = configSettings
 	return nil
 }
 

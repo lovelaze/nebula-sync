@@ -2,6 +2,7 @@ package pihole
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,26 +19,25 @@ var (
 	userAgent = fmt.Sprintf("nebula-sync/%s", version.Version)
 )
 
-func NewClient(piHole model.PiHole, httpClient *http.Client) Client {
-	logger := log.With().Str("client", piHole.Url.String()).Logger()
-	return &client{
-		piHole:     piHole,
-		logger:     &logger,
-		httpClient: httpClient,
-	}
-}
-
 type Client interface {
 	PostAuth() error
 	DeleteSession() error
-	GetVersion() (*model.VersionResponse, error)
 	GetTeleporter() ([]byte, error)
 	PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error
 	GetConfig() (configResponse *model.ConfigResponse, err error)
 	PatchConfig(patchRequest *model.PatchConfigRequest) error
 	PostRunGravity() error
 	String() string
-	ApiPath(target string) string
+	APIPath(target string) string
+}
+
+func NewClient(piHole model.PiHole, httpClient *http.Client) Client {
+	logger := log.With().Str("client", piHole.URL.String()).Logger()
+	return &client{
+		piHole:     piHole,
+		logger:     &logger,
+		httpClient: httpClient,
+	}
 }
 
 type client struct {
@@ -71,7 +71,7 @@ func (client *client) PostAuth() error {
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequest("POST", client.ApiPath("/auth"), bytes.NewReader(reqBytes))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, client.APIPath("/auth"), bytes.NewReader(reqBytes))
 
 	if err != nil {
 		return client.wrapError(err, req)
@@ -84,8 +84,9 @@ func (client *client) PostAuth() error {
 	if err != nil {
 		return client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return client.wrapError(err, req)
 	}
 
@@ -119,58 +120,25 @@ func (client *client) DeleteSession() error {
 		return nil
 	}
 
-	req, err := http.NewRequest("DELETE", client.ApiPath("auth"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodDelete, client.APIPath("auth"), nil)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
 
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := client.httpClient.Do(req)
-
 	if err != nil {
 		return client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return client.wrapError(err, req)
 	}
 
 	return client.wrapError(err, req)
-}
-
-func (client *client) GetVersion() (*model.VersionResponse, error) {
-	client.logger.Debug().Msg("Get version")
-	versionResponse := model.VersionResponse{}
-	if err := client.auth.verify(); err != nil {
-		return &versionResponse, client.wrapError(err, nil)
-	}
-
-	req, err := http.NewRequest("GET", client.ApiPath("info/version"), nil)
-	if err != nil {
-		return &versionResponse, client.wrapError(err, req)
-	}
-	req.Header.Set("sid", client.auth.sid)
-	req.Header.Set("User-Agent", userAgent)
-
-	response, err := client.httpClient.Do(req)
-	if err != nil {
-		return &versionResponse, client.wrapError(err, req)
-	}
-
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return &versionResponse, client.wrapError(err, req)
-	}
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return &versionResponse, client.wrapError(err, req)
-	}
-
-	err = json.Unmarshal(body, &versionResponse)
-
-	return &versionResponse, client.wrapError(err, req)
 }
 
 func (client *client) GetTeleporter() ([]byte, error) {
@@ -178,19 +146,20 @@ func (client *client) GetTeleporter() ([]byte, error) {
 	if err := client.auth.verify(); err != nil {
 		return nil, client.wrapError(err, nil)
 	}
-	req, err := http.NewRequest("GET", client.ApiPath("teleporter"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, client.APIPath("teleporter"), nil)
 	if err != nil {
 		return nil, client.wrapError(err, req)
 	}
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return nil, client.wrapError(err, req)
 	}
 
@@ -227,11 +196,11 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequest("POST", client.ApiPath("teleporter"), &requestBody)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, client.APIPath("teleporter"), &requestBody)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("User-Agent", userAgent)
 
@@ -239,46 +208,49 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 	if err != nil {
 		return client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return client.wrapError(err, req)
 	}
 
 	return nil
 }
 
-func (client *client) GetConfig() (configResponse *model.ConfigResponse, err error) {
+func (client *client) GetConfig() (*model.ConfigResponse, error) {
+	var configResponse model.ConfigResponse
 	client.logger.Debug().Msg("Get config")
 	if err := client.auth.verify(); err != nil {
-		return configResponse, client.wrapError(err, nil)
+		return &configResponse, client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequest("GET", client.ApiPath("config"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, client.APIPath("config"), nil)
 	if err != nil {
-		return configResponse, client.wrapError(err, req)
+		return &configResponse, client.wrapError(err, req)
 	}
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := client.httpClient.Do(req)
 	if err != nil {
-		return configResponse, client.wrapError(err, req)
+		return &configResponse, client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
-		return configResponse, client.wrapError(err, req)
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+		return &configResponse, client.wrapError(err, req)
 	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return configResponse, client.wrapError(err, req)
+		return &configResponse, client.wrapError(err, req)
 	}
 
 	if err := json.Unmarshal(body, &configResponse); err != nil {
-		return configResponse, client.wrapError(err, req)
+		return &configResponse, client.wrapError(err, req)
 	}
 
-	return configResponse, client.wrapError(err, req)
+	return &configResponse, client.wrapError(err, req)
 }
 
 func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error {
@@ -292,19 +264,20 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequest("PATCH", client.ApiPath("config"), bytes.NewReader(reqBytes))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPatch, client.APIPath("config"), bytes.NewReader(reqBytes))
 	if err != nil {
 		return client.wrapError(err, req)
 	}
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return client.wrapError(err, req)
 	}
 
@@ -317,19 +290,20 @@ func (client *client) PostRunGravity() error {
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequest("POST", client.ApiPath("action/gravity"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, client.APIPath("action/gravity"), nil)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
-	req.Header.Set("sid", client.auth.sid)
+	req.Header.Set("Sid", client.auth.sid)
 	req.Header.Set("User-Agent", userAgent)
 
 	response, err := client.httpClient.Do(req)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
+	defer response.Body.Close()
 
-	if err := successfulHttpStatus(response.StatusCode); err != nil {
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
 		return client.wrapError(err, req)
 	}
 
@@ -337,11 +311,11 @@ func (client *client) PostRunGravity() error {
 }
 
 func (client *client) String() string {
-	return client.piHole.Url.String()
+	return client.piHole.URL.String()
 }
 
-func (client *client) ApiPath(target string) string {
-	return client.piHole.Url.JoinPath("api", target).String()
+func (client *client) APIPath(target string) string {
+	return client.piHole.URL.JoinPath("api", target).String()
 }
 
 func (client *client) wrapError(err error, req *http.Request) error {
@@ -354,7 +328,7 @@ func (client *client) wrapError(err error, req *http.Request) error {
 	return nil
 }
 
-func successfulHttpStatus(statusCode int) error {
+func successfulHTTPStatus(statusCode int) error {
 	if statusCode >= 200 && statusCode <= 299 {
 		return nil
 	}

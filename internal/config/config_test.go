@@ -18,12 +18,12 @@ func TestConfig_Load(t *testing.T) {
 	err := conf.Load()
 	require.NoError(t, err)
 
-	assert.Equal(t, "http://localhost:1337", conf.Primary.Url.String())
+	assert.Equal(t, "http://localhost:1337", conf.Primary.URL.String())
 	assert.Equal(t, "asdf", conf.Primary.Password)
 	assert.Len(t, conf.Replicas, 1)
-	assert.Equal(t, "http://localhost:1338", conf.Replicas[0].Url.String())
+	assert.Equal(t, "http://localhost:1338", conf.Replicas[0].URL.String())
 	assert.Equal(t, "qwerty", conf.Replicas[0].Password)
-	assert.Equal(t, false, conf.Sync.FullSync)
+	assert.False(t, conf.Sync.FullSync)
 	assert.Equal(t, "POST", conf.Sync.WebhookSettings.Success.Method)
 	assert.Equal(t, "POST", conf.Sync.WebhookSettings.Failure.Method)
 }
@@ -56,9 +56,9 @@ func TestConfig_loadSync(t *testing.T) {
 	err := conf.loadSync()
 	require.NoError(t, err)
 
-	assert.Equal(t, true, conf.Sync.FullSync)
+	assert.True(t, conf.Sync.FullSync)
 	assert.Equal(t, "* * * * *", *conf.Sync.Cron)
-	assert.Equal(t, true, conf.Sync.RunGravity)
+	assert.True(t, conf.Sync.RunGravity)
 
 	assert.NotNil(t, conf.Sync.ConfigSettings)
 	assert.NotNil(t, conf.Sync.GravitySettings)
@@ -120,24 +120,24 @@ func TestRawConfig_Parse_Include(t *testing.T) {
 	t.Setenv("SYNC_CONFIG_DEBUG_INCLUDE", "key13,key14")
 
 	sync := Sync{}
-	assert.NoError(t, sync.loadConfigSettings())
+	require.NoError(t, sync.loadConfigSettings())
 
 	settings := sync.ConfigSettings
 
-	assert.Equal(t, settings.DNS.Filter.Type, filter.Include)
-	assert.Equal(t, settings.DNS.Filter.Keys, []string{"key1", "key2"})
-	assert.Equal(t, settings.DHCP.Filter.Type, filter.Include)
-	assert.Equal(t, settings.DHCP.Filter.Keys, []string{"key3", "key4"})
-	assert.Equal(t, settings.NTP.Filter.Type, filter.Include)
-	assert.Equal(t, settings.NTP.Filter.Keys, []string{"key5", "key6"})
-	assert.Equal(t, settings.Resolver.Filter.Type, filter.Include)
-	assert.Equal(t, settings.Resolver.Filter.Keys, []string{"key7", "key8"})
-	assert.Equal(t, settings.Database.Filter.Type, filter.Include)
-	assert.Equal(t, settings.Database.Filter.Keys, []string{"key9", "key10"})
-	assert.Equal(t, settings.Misc.Filter.Type, filter.Include)
-	assert.Equal(t, settings.Misc.Filter.Keys, []string{"key11", "key12"})
-	assert.Equal(t, settings.Debug.Filter.Type, filter.Include)
-	assert.Equal(t, settings.Debug.Filter.Keys, []string{"key13", "key14"})
+	assert.Equal(t, filter.Include, settings.DNS.Filter.Type)
+	assert.Equal(t, []string{"key1", "key2"}, settings.DNS.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.DHCP.Filter.Type)
+	assert.Equal(t, []string{"key3", "key4"}, settings.DHCP.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.NTP.Filter.Type)
+	assert.Equal(t, []string{"key5", "key6"}, settings.NTP.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.Resolver.Filter.Type)
+	assert.Equal(t, []string{"key7", "key8"}, settings.Resolver.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.Database.Filter.Type)
+	assert.Equal(t, []string{"key9", "key10"}, settings.Database.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.Misc.Filter.Type)
+	assert.Equal(t, []string{"key11", "key12"}, settings.Misc.Filter.Keys)
+	assert.Equal(t, filter.Include, settings.Debug.Filter.Type)
+	assert.Equal(t, []string{"key13", "key14"}, settings.Debug.Filter.Keys)
 }
 
 func TestRawConfig_Parse_Exclude(t *testing.T) {
@@ -150,24 +150,24 @@ func TestRawConfig_Parse_Exclude(t *testing.T) {
 	t.Setenv("SYNC_CONFIG_DEBUG_EXCLUDE", "key13,key14")
 
 	sync := Sync{}
-	assert.NoError(t, sync.loadConfigSettings())
+	require.NoError(t, sync.loadConfigSettings())
 
 	settings := sync.ConfigSettings
 
-	assert.Equal(t, settings.DNS.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.DNS.Filter.Keys, []string{"key1", "key2"})
-	assert.Equal(t, settings.DHCP.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.DHCP.Filter.Keys, []string{"key3", "key4"})
-	assert.Equal(t, settings.NTP.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.NTP.Filter.Keys, []string{"key5", "key6"})
-	assert.Equal(t, settings.Resolver.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.Resolver.Filter.Keys, []string{"key7", "key8"})
-	assert.Equal(t, settings.Database.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.Database.Filter.Keys, []string{"key9", "key10"})
-	assert.Equal(t, settings.Misc.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.Misc.Filter.Keys, []string{"key11", "key12"})
-	assert.Equal(t, settings.Debug.Filter.Type, filter.Exclude)
-	assert.Equal(t, settings.Debug.Filter.Keys, []string{"key13", "key14"})
+	assert.Equal(t, filter.Exclude, settings.DNS.Filter.Type)
+	assert.Equal(t, []string{"key1", "key2"}, settings.DNS.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.DHCP.Filter.Type)
+	assert.Equal(t, []string{"key3", "key4"}, settings.DHCP.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.NTP.Filter.Type)
+	assert.Equal(t, []string{"key5", "key6"}, settings.NTP.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.Resolver.Filter.Type)
+	assert.Equal(t, []string{"key7", "key8"}, settings.Resolver.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.Database.Filter.Type)
+	assert.Equal(t, []string{"key9", "key10"}, settings.Database.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.Misc.Filter.Type)
+	assert.Equal(t, []string{"key11", "key12"}, settings.Misc.Filter.Keys)
+	assert.Equal(t, filter.Exclude, settings.Debug.Filter.Type)
+	assert.Equal(t, []string{"key13", "key14"}, settings.Debug.Filter.Keys)
 }
 
 func TestConfig_NewConfigSetting(t *testing.T) {
@@ -182,12 +182,12 @@ func TestConfig_NewConfigSetting(t *testing.T) {
 	include := NewConfigSetting(true, []string{"key1", "key2"}, nil)
 	assert.True(t, include.Enabled)
 	assert.NotNil(t, include.Filter)
-	assert.Equal(t, include.Filter.Type, filter.Include)
-	assert.Equal(t, include.Filter.Keys, []string{"key1", "key2"})
+	assert.Equal(t, filter.Include, include.Filter.Type)
+	assert.Equal(t, []string{"key1", "key2"}, include.Filter.Keys)
 
 	exclude := NewConfigSetting(true, nil, []string{"key1", "key2"})
 	assert.True(t, exclude.Enabled)
 	assert.NotNil(t, exclude.Filter)
-	assert.Equal(t, exclude.Filter.Type, filter.Exclude)
-	assert.Equal(t, exclude.Filter.Keys, []string{"key1", "key2"})
+	assert.Equal(t, filter.Exclude, exclude.Filter.Type)
+	assert.Equal(t, []string{"key1", "key2"}, exclude.Filter.Keys)
 }

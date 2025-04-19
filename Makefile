@@ -4,7 +4,7 @@ lint:
 fmt:
 	golangci-lint fmt
 
-mock:
+mocks:
 	mockery --config .mockery.yaml
 
 unit-test:

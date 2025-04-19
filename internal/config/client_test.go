@@ -16,7 +16,7 @@ func TestConfig_LoadClient(t *testing.T) {
 	err := conf.loadClient()
 	require.NoError(t, err)
 
-	assert.Equal(t, true, conf.Client.SkipTLSVerification)
+	assert.True(t, conf.Client.SkipTLSVerification)
 	assert.Equal(t, int64(45), conf.Client.Timeout)
 	assert.Equal(t, int64(5), conf.Client.RetryDelay)
 }

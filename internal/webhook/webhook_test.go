@@ -20,7 +20,7 @@ func TestWebhook(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			receivedHeaders = r.Header
 			buf, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			receivedBody = string(buf)
 			w.WriteHeader(http.StatusOK)
 		}))
@@ -29,7 +29,7 @@ func TestWebhook(t *testing.T) {
 		// Create webhook settings
 		settings := &config.WebhookSettings{
 			Success: config.WebhookRequest{
-				Url:     ts.URL,
+				URL:     ts.URL,
 				Method:  "POST",
 				Body:    "success-body",
 				Headers: map[string]string{"X-Test": "success"},
@@ -53,7 +53,7 @@ func TestWebhook(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			receivedHeaders = r.Header
 			buf, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			receivedBody = string(buf)
 			w.WriteHeader(http.StatusOK)
 		}))
@@ -61,7 +61,7 @@ func TestWebhook(t *testing.T) {
 
 		settings := &config.WebhookSettings{
 			Failure: config.WebhookRequest{
-				Url:     ts.URL,
+				URL:     ts.URL,
 				Method:  "PUT",
 				Body:    "failure-body",
 				Headers: map[string]string{"X-Test": "failure"},
@@ -80,7 +80,7 @@ func TestWebhook(t *testing.T) {
 	t.Run("empty url skips webhook", func(t *testing.T) {
 		settings := &config.WebhookSettings{
 			Success: config.WebhookRequest{
-				Url: "",
+				URL: "",
 			},
 		}
 
@@ -97,7 +97,7 @@ func TestWebhook(t *testing.T) {
 
 		settings := &config.WebhookSettings{
 			Success: config.WebhookRequest{
-				Url: ts.URL,
+				URL: ts.URL,
 			},
 		}
 

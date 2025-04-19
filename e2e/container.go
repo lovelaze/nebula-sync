@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const startupTimeout = 30 * time.Second
+
 type PiHoleContainer struct {
 	Container tc.Container
 	password  string
@@ -45,7 +47,7 @@ func (c *PiHoleContainer) EnvString(ssl bool) string {
 
 func RunPiHole(password string) *PiHoleContainer {
 	logStrategy := wait.ForLog("listening on")
-	portStrategy := wait.ForListeningPort("80").WithStartupTimeout(30 * time.Second)
+	portStrategy := wait.ForListeningPort("80").WithStartupTimeout(startupTimeout)
 
 	containerReq := tc.GenericContainerRequest{
 		ContainerRequest: tc.ContainerRequest{

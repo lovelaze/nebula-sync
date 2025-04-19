@@ -16,59 +16,21 @@ type AuthResponse struct {
 	} `json:"session"`
 }
 
-type VersionResponse struct {
-	Version struct {
-		Core struct {
-			Local struct {
-				Version string `json:"version"`
-				Branch  string `json:"branch"`
-				Hash    string `json:"hash"`
-			} `json:"local"`
-			Remote struct {
-				Version interface{} `json:"version"`
-				Hash    string      `json:"hash"`
-			} `json:"remote"`
-		} `json:"core"`
-		Web struct {
-			Local struct {
-				Version string `json:"version"`
-				Branch  string `json:"branch"`
-				Hash    string `json:"hash"`
-			} `json:"local"`
-			Remote struct {
-				Version interface{} `json:"version"`
-				Hash    string      `json:"hash"`
-			} `json:"remote"`
-		} `json:"web"`
-		Ftl struct {
-			Local struct {
-				Hash    string `json:"hash"`
-				Branch  string `json:"branch"`
-				Version string `json:"version"`
-				Date    string `json:"date"`
-			} `json:"local"`
-			Remote struct {
-				Version interface{} `json:"version"`
-				Hash    string      `json:"hash"`
-			} `json:"remote"`
-		} `json:"ftl"`
-		Docker struct {
-			Local  string `json:"local"`
-			Remote string `json:"remote"`
-		} `json:"docker"`
-	} `json:"version"`
-	Took float64 `json:"took"`
-}
-
 type ConfigResponse struct {
-	Config map[string]interface{} `json:"config"`
+	Config map[string]any `json:"config"`
 }
 
-func (c *ConfigResponse) Get(key string) map[string]interface{} {
+func (c *ConfigResponse) Get(key string) map[string]any {
 	value, exists := c.Config[key]
 	if !exists {
 		log.Warn().Msg(fmt.Sprintf("Missing key (%s) in config response", key))
 		return nil
 	}
-	return value.(map[string]interface{})
+
+	extracted, ok := value.(map[string]any)
+	if !ok {
+		log.Warn().Msg(fmt.Sprintf("Received unexpected type for key (%s) in config response", key))
+		return nil
+	}
+	return extracted
 }

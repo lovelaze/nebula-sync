@@ -21,13 +21,13 @@ type PostTeleporterRequest struct {
 }
 
 type PatchConfig struct {
-	DNS      map[string]interface{} `json:"dns"`
-	DHCP     map[string]interface{} `json:"dhcp"`
-	NTP      map[string]interface{} `json:"ntp"`
-	Resolver map[string]interface{} `json:"resolver"`
-	Database map[string]interface{} `json:"database"`
-	Misc     map[string]interface{} `json:"misc"`
-	Debug    map[string]interface{} `json:"debug"`
+	DNS      map[string]any `json:"dns"`
+	DHCP     map[string]any `json:"dhcp"`
+	NTP      map[string]any `json:"ntp"`
+	Resolver map[string]any `json:"resolver"`
+	Database map[string]any `json:"database"`
+	Misc     map[string]any `json:"misc"`
+	Debug    map[string]any `json:"debug"`
 }
 
 type PatchConfigRequest struct {

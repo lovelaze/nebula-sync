@@ -6,7 +6,7 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/config"
 )
 
-func (target *target) FullSync(conf *config.Sync) (err error) {
+func (target *target) FullSync(conf *config.Sync) error {
 	return target.sync(func() error {
 		return target.full(conf)
 	}, "full")

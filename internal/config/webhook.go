@@ -20,7 +20,7 @@ type WebhookRequest struct {
 	Body    string            `envconfig:"BODY"`
 	Headers map[string]string `envconfig:"HEADERS"`
 	Method  string            `default:"POST" envconfig:"METHOD"`
-	Url     string            `envconfig:"URL"`
+	URL     string            `envconfig:"URL"`
 }
 
 func (c *Config) loadWebhookSettings() error {

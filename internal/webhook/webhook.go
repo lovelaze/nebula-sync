@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -10,6 +11,11 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/version"
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	timeout                        = 10 * time.Second
+	invalidHTTPStatusCodeThreshold = 400
 )
 
 type Client struct {
@@ -23,7 +29,7 @@ func NewClient(c *config.WebhookSettings) *Client {
 		success: c.Success,
 		failure: c.Failure,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: timeout,
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.Client.SkipTLSVerification},
 			}},
@@ -51,18 +57,18 @@ func (c *Client) triggerFailure() error {
 }
 
 func invoke(client *http.Client, settings config.WebhookRequest) error {
-	if settings.Url == "" {
+	if settings.URL == "" {
 		return nil
 	}
 
 	log.Debug().
-		Str("url", settings.Url).
+		Str("url", settings.URL).
 		Str("method", settings.Method).
 		Str("body", settings.Body).
 		Interface("headers", settings.Headers).
 		Msg("Invoking webhook")
 
-	req, err := http.NewRequest(settings.Method, settings.Url, strings.NewReader(settings.Body))
+	req, err := http.NewRequestWithContext(context.Background(), settings.Method, settings.URL, strings.NewReader(settings.Body))
 	if err != nil {
 		return fmt.Errorf("create webhook request: %w", err)
 	}
@@ -79,7 +85,7 @@ func invoke(client *http.Client, settings config.WebhookRequest) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= invalidHTTPStatusCodeThreshold {
 		return fmt.Errorf("webhook returned status %d", resp.StatusCode)
 	}
 

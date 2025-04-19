@@ -33,7 +33,7 @@ func Init() (*Service, error) {
 		return nil, err
 	}
 
-	httpClient := conf.Client.NewHttpClient()
+	httpClient := conf.Client.NewHTTPClient()
 	retry.Init(conf.Client)
 
 	primary := pihole.NewClient(conf.Primary, httpClient)
@@ -68,12 +68,8 @@ func (service *Service) Run() error {
 	return nil
 }
 
-func (service *Service) doSync(t sync.Target) (err error) {
-	if service.conf.Sync.FullSync {
-		err = t.FullSync(service.conf.Sync)
-	} else {
-		err = t.SelectiveSync(service.conf.Sync)
-	}
+func (service *Service) doSync(t sync.Target) error {
+	err := service.selectSyncMethod(t)
 
 	if err != nil {
 		for _, callback := range service.callbacks {
@@ -87,6 +83,14 @@ func (service *Service) doSync(t sync.Target) (err error) {
 	}
 
 	return err
+}
+
+func (service *Service) selectSyncMethod(t sync.Target) error {
+	if service.conf.Sync.FullSync {
+		return t.FullSync(service.conf.Sync)
+	}
+
+	return t.SelectiveSync(service.conf.Sync)
 }
 
 func (service *Service) startCron(cmd func()) error {

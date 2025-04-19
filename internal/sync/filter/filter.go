@@ -24,7 +24,7 @@ func (ft Type) String() string {
 	return s
 }
 
-func ByType(filter Type, keys []string, json map[string]interface{}) (map[string]interface{}, error) {
+func ByType(filter Type, keys []string, json map[string]any) (map[string]any, error) {
 	switch filter {
 	case Include:
 		return includeKeys(json, keys), nil
@@ -35,8 +35,8 @@ func ByType(filter Type, keys []string, json map[string]interface{}) (map[string
 	}
 }
 
-func includeKeys(jsonData map[string]interface{}, keys []string) map[string]interface{} {
-	result := make(map[string]interface{})
+func includeKeys(jsonData map[string]any, keys []string) map[string]any {
+	result := make(map[string]any)
 
 	for _, key := range keys {
 		value := getNestedValue(jsonData, key)
@@ -50,7 +50,7 @@ func includeKeys(jsonData map[string]interface{}, keys []string) map[string]inte
 	return result
 }
 
-func excludeKeys(jsonData map[string]interface{}, keys []string) map[string]interface{} {
+func excludeKeys(jsonData map[string]any, keys []string) map[string]any {
 	result := deepCopy(jsonData)
 
 	for _, key := range keys {
@@ -60,11 +60,11 @@ func excludeKeys(jsonData map[string]interface{}, keys []string) map[string]inte
 	return result
 }
 
-func getNestedValue(data map[string]interface{}, key string) interface{} {
+func getNestedValue(data map[string]any, key string) any {
 	keys := strings.Split(key, ".")
 	current := data
 	for i, k := range keys {
-		if next, ok := current[k].(map[string]interface{}); ok {
+		if next, ok := current[k].(map[string]any); ok {
 			current = next
 			if i == len(keys)-1 {
 				return next
@@ -78,15 +78,15 @@ func getNestedValue(data map[string]interface{}, key string) interface{} {
 	return current
 }
 
-func setNestedValue(target map[string]interface{}, key string, value interface{}) {
+func setNestedValue(target map[string]any, key string, value any) {
 	keys := strings.Split(key, ".")
 	current := target
 
 	for _, k := range keys[:len(keys)-1] {
 		if _, exists := current[k]; !exists {
-			current[k] = make(map[string]interface{})
+			current[k] = make(map[string]any)
 		}
-		if next, ok := current[k].(map[string]interface{}); ok {
+		if next, ok := current[k].(map[string]any); ok {
 			current = next
 		}
 	}
@@ -95,7 +95,7 @@ func setNestedValue(target map[string]interface{}, key string, value interface{}
 	current[lastKey] = value
 }
 
-func removeNestedKey(target map[string]interface{}, keys []string) {
+func removeNestedKey(target map[string]any, keys []string) {
 	if len(keys) == 0 {
 		return
 	}
@@ -114,7 +114,7 @@ func removeNestedKey(target map[string]interface{}, keys []string) {
 		return
 	}
 
-	if nested, exists := target[currentKey].(map[string]interface{}); exists {
+	if nested, exists := target[currentKey].(map[string]any); exists {
 		removeNestedKey(nested, remainingKeys)
 		if len(nested) == 0 {
 			delete(target, currentKey)
@@ -122,11 +122,11 @@ func removeNestedKey(target map[string]interface{}, keys []string) {
 	}
 }
 
-func deepCopy(original map[string]interface{}) map[string]interface{} {
-	copied := make(map[string]interface{})
+func deepCopy(original map[string]any) map[string]any {
+	copied := make(map[string]any)
 	for key, value := range original {
 		switch v := value.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			copied[key] = deepCopy(v)
 		default:
 			copied[key] = v

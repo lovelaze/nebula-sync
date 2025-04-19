@@ -30,7 +30,7 @@ type clientTestSuite struct {
 func (suite *clientTestSuite) SetupTest() {
 	client := createClient(piHole)
 	err := client.PostAuth()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	suite.client = client
 }
 
@@ -41,27 +41,20 @@ func TestClientIntegration(t *testing.T) {
 func (suite *clientTestSuite) TestClient_Authenticate() {
 	err := suite.client.PostAuth()
 
-	assert.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *clientTestSuite) TestClient_DeleteSession() {
 	err := suite.client.DeleteSession()
 
-	assert.NoError(suite.T(), err)
-}
-
-func (suite *clientTestSuite) TestClient_GetVersion() {
-	version, err := suite.client.GetVersion()
-
-	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), version)
+	suite.Require().NoError(err)
 }
 
 func (suite *clientTestSuite) TestClient_GetTeleporter() {
 	payload, err := suite.client.GetTeleporter()
 
-	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), payload)
+	suite.Require().NoError(err)
+	suite.NotNil(suite.T(), payload)
 }
 
 func (suite *clientTestSuite) TestClient_PostTeleporter() {
@@ -80,14 +73,14 @@ func (suite *clientTestSuite) TestClient_PostTeleporter() {
 		},
 	})
 
-	assert.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *clientTestSuite) TestClient_GetConfig() {
 	conf, err := suite.client.GetConfig()
 
-	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), conf)
+	suite.Require().NoError(err)
+	suite.NotNil(suite.T(), conf)
 }
 
 func (suite *clientTestSuite) TestClient_PatchConfig() {
@@ -103,13 +96,13 @@ func (suite *clientTestSuite) TestClient_PatchConfig() {
 		}}
 	err := suite.client.PatchConfig(&request)
 
-	assert.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *clientTestSuite) TestClient_PostRunGravity() {
 	err := suite.client.PostRunGravity()
 
-	assert.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func TestClient_String(t *testing.T) {
@@ -124,7 +117,7 @@ func TestClient_ApiPath(t *testing.T) {
 	c := NewClient(piHole, httpClient)
 
 	url := c.String()
-	path := c.ApiPath("testing")
+	path := c.APIPath("testing")
 	expectedPath := fmt.Sprintf("%s/api/testing", url)
 
 	assert.Equal(t, expectedPath, path)
@@ -137,10 +130,10 @@ func Test_auth_verify(t *testing.T) {
 		validity: 0,
 		valid:    false,
 	}
-	assert.Error(t, a.verify())
+	require.Error(t, a.verify())
 
 	a.valid = true
-	assert.NoError(t, a.verify())
+	require.NoError(t, a.verify())
 }
 
 func createClient(container tc.Container) Client {

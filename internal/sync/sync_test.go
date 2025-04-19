@@ -165,13 +165,13 @@ func Test_filterPatchConfigRequest_disabled(t *testing.T) {
 }
 
 func emptyConfigResponse() *model.ConfigResponse {
-	return &model.ConfigResponse{Config: map[string]interface{}{
-		"dns":      map[string]interface{}{},
-		"dhcp":     map[string]interface{}{},
-		"ntp":      map[string]interface{}{},
-		"resolver": map[string]interface{}{},
-		"database": map[string]interface{}{},
-		"misc":     map[string]interface{}{},
-		"debug":    map[string]interface{}{},
+	return &model.ConfigResponse{Config: map[string]any{
+		"dns":      map[string]any{},
+		"dhcp":     map[string]any{},
+		"ntp":      map[string]any{},
+		"resolver": map[string]any{},
+		"database": map[string]any{},
+		"misc":     map[string]any{},
+		"debug":    map[string]any{},
 	}}
 }

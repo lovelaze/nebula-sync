@@ -20,9 +20,9 @@ func TestWebhookSettings_Load_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	success := conf.Sync.WebhookSettings.Success
-	assert.Equal(t, "http://success.example.com", success.Url)
+	assert.Equal(t, "http://success.example.com", success.URL)
 	assert.Equal(t, "POST", success.Method)
-	assert.Equal(t, "{\"status\":\"ok\"}", success.Body)
+	assert.JSONEq(t, `{"status":"ok"}`, success.Body)
 	assert.Equal(t, map[string]string{
 		"Content-Type":    "application/json",
 		"Authorization":   "Bearer token",
@@ -43,9 +43,9 @@ func TestWebhookSettings_Load_Failure(t *testing.T) {
 	require.NoError(t, err)
 
 	failure := conf.Sync.WebhookSettings.Failure
-	assert.Equal(t, "http://failure.example.com", failure.Url)
+	assert.Equal(t, "http://failure.example.com", failure.URL)
 	assert.Equal(t, "PUT", failure.Method)
-	assert.Equal(t, "{\"status\":\"error\"}", failure.Body)
+	assert.JSONEq(t, `{"status":"error"}`, failure.Body)
 	assert.Equal(t, map[string]string{
 		"Content-Type": "application/json",
 	}, failure.Headers)
@@ -89,8 +89,8 @@ func TestWebhookSettings_EmptyURLs(t *testing.T) {
 	err := conf.loadWebhookSettings()
 	require.NoError(t, err)
 
-	assert.Empty(t, conf.Sync.WebhookSettings.Success.Url)
-	assert.Empty(t, conf.Sync.WebhookSettings.Failure.Url)
+	assert.Empty(t, conf.Sync.WebhookSettings.Success.URL)
+	assert.Empty(t, conf.Sync.WebhookSettings.Failure.URL)
 }
 
 func TestWebhookSettings_ClientConfiguration(t *testing.T) {

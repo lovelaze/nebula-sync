@@ -11,8 +11,8 @@ var rootCmd = &cobra.Command{
 	Version: version.Version,
 }
 
-func Execute() {
-	rootCmd.Execute()
+func Execute() error {
+	return rootCmd.Execute()
 }
 
 func init() {

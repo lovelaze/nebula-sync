@@ -25,32 +25,34 @@ func (c *Config) loadTargets() error {
 
 func loadPrimary() (*model.PiHole, error) {
 	env := "PRIMARY"
-	if value := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(value) > 0 {
-		if bytes, err := os.ReadFile(value); err != nil {
+	if fileValue := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(fileValue) > 0 {
+		bytes, err := os.ReadFile(fileValue)
+		if err != nil {
 			return nil, err
-		} else {
-			return parse(strings.TrimSpace(string(bytes)))
 		}
-	} else if value := os.Getenv(env); len(value) > 0 {
-		return parse(value)
-	} else {
-		return nil, fmt.Errorf("missing required env: %s/%s_FILE", env, env)
+
+		return parse(strings.TrimSpace(string(bytes)))
+	} else if envValue := os.Getenv(env); len(envValue) > 0 {
+		return parse(envValue)
 	}
+
+	return nil, fmt.Errorf("missing required env: %s/%s_FILE", env, env)
 }
 
 func loadReplicas() ([]model.PiHole, error) {
 	env := "REPLICAS"
-	if value := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(value) > 0 {
-		if bytes, err := os.ReadFile(value); err != nil {
+	if fileValue := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(fileValue) > 0 {
+		bytes, err := os.ReadFile(fileValue)
+		if err != nil {
 			return nil, err
-		} else {
-			return parseMultiple(strings.Split(strings.TrimSpace(string(bytes)), ","))
 		}
-	} else if value := os.Getenv(env); len(value) > 0 {
-		return parseMultiple(strings.Split(value, ","))
-	} else {
-		return nil, fmt.Errorf("missing required env: %s/%s_FILE", env, env)
+
+		return parseMultiple(strings.Split(strings.TrimSpace(string(bytes)), ","))
+	} else if envValue := os.Getenv(env); len(envValue) > 0 {
+		return parseMultiple(strings.Split(envValue, ","))
 	}
+
+	return nil, fmt.Errorf("missing required env: %s/%s_FILE", env, env)
 }
 
 func parse(value string) (*model.PiHole, error) {
@@ -64,12 +66,12 @@ func parse(value string) (*model.PiHole, error) {
 func parseMultiple(values []string) ([]model.PiHole, error) {
 	replicas := []model.PiHole{}
 	for _, value := range values {
-		if ph, err := parse(value); err != nil {
+		ph, err := parse(value)
+		if err != nil {
 			return nil, err
-		} else {
-			replicas = append(replicas, *ph)
 		}
-
+		
+		replicas = append(replicas, *ph)
 	}
 	return replicas, nil
 }

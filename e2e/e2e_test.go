@@ -2,7 +2,6 @@ package e2e
 
 import (
 	"github.com/lovelaze/nebula-sync/internal/service"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -29,9 +28,9 @@ func (suite *testSuite) Test_FullSync() {
 	suite.T().Setenv("RUN_GRAVITY", "true")
 
 	s, err := service.Init()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	err = s.Run()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) Test_FullSync_SSL() {
@@ -41,9 +40,9 @@ func (suite *testSuite) Test_FullSync_SSL() {
 	suite.T().Setenv("CLIENT_SKIP_TLS_VERIFICATION", "true")
 
 	s, err := service.Init()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	err = s.Run()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) Test_SelectiveSync() {
@@ -55,9 +54,9 @@ func (suite *testSuite) Test_SelectiveSync() {
 	setAllManualGravity(suite)
 
 	s, err := service.Init()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	err = s.Run()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) Test_SelectiveSync_Include() {
@@ -76,9 +75,9 @@ func (suite *testSuite) Test_SelectiveSync_Include() {
 	suite.T().Setenv("SYNC_CONFIG_DEBUG_INCLUDE", "database,networking")
 
 	s, err := service.Init()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	err = s.Run()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func (suite *testSuite) Test_SelectiveSync_Exclude() {
@@ -97,9 +96,9 @@ func (suite *testSuite) Test_SelectiveSync_Exclude() {
 	suite.T().Setenv("SYNC_CONFIG_DEBUG_EXCLUDE", "database,networking")
 
 	s, err := service.Init()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	err = s.Run()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 }
 
 func setAllManualConfig(suite *testSuite) {

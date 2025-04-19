@@ -57,5 +57,6 @@ func Init() {
 		}
 	}
 
+	//nolint:reassign //not passed around
 	log.Logger = logger
 }

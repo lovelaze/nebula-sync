@@ -28,7 +28,8 @@ func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 	}
 }
 
-func (target *target) sync(syncFunc func() error, mode string) (err error) {
+func (target *target) sync(syncFunc func() error, mode string) error {
+	var err error
 	log.Info().Str("mode", mode).Int("replicas", len(target.Replicas)).Msg("Running sync")
 
 	defer func() {
@@ -45,7 +46,7 @@ func (target *target) sync(syncFunc func() error, mode string) (err error) {
 	return syncFunc()
 }
 
-func (target *target) authenticate() (err error) {
+func (target *target) authenticate() error {
 	log.Info().Msg("Authenticating clients...")
 	if err := target.Primary.PostAuth(); err != nil {
 		return err
@@ -59,7 +60,7 @@ func (target *target) authenticate() (err error) {
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (target *target) deleteSessions() {
@@ -84,7 +85,7 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 		return err
 	}
 
-	var teleporterRequest *model.PostTeleporterRequest = nil
+	var teleporterRequest *model.PostTeleporterRequest
 	if gravitySettings != nil {
 		teleporterRequest = createPostTeleporterRequest(gravitySettings)
 	}
@@ -166,18 +167,18 @@ func createPatchConfigRequest(config *config.ConfigSettings, configResponse *mod
 	return &model.PatchConfigRequest{Config: patchConfig}
 }
 
-func filterPatchConfigRequest(setting *config.ConfigSetting, json map[string]interface{}) map[string]interface{} {
+func filterPatchConfigRequest(setting *config.ConfigSetting, json map[string]any) map[string]any {
 	if !setting.Enabled {
 		return nil
 	}
 
 	if setting.Filter != nil {
-		filteredJson, err := filter.ByType(setting.Filter.Type, setting.Filter.Keys, json)
+		filteredJSON, err := filter.ByType(setting.Filter.Type, setting.Filter.Keys, json)
 		if err != nil {
 			log.Warn().Err(err).Msg("Unable to filter json object")
 			return nil
 		}
-		return filteredJson
+		return filteredJSON
 	}
 
 	return json

@@ -26,11 +26,11 @@ func (c *Config) loadClient() error {
 	return nil
 }
 
-func (settings *Client) NewHttpClient() *http.Client {
+func (c *Client) NewHTTPClient() *http.Client {
 	return &http.Client{
-		Timeout: time.Duration(settings.Timeout) * time.Second,
+		Timeout: time.Duration(c.Timeout) * time.Second,
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: settings.SkipTLSVerification},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: c.SkipTLSVerification},
 		},
 	}
 }

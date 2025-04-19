@@ -3,6 +3,7 @@ package retry
 import (
 	"errors"
 	"github.com/lovelaze/nebula-sync/internal/config"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func TestWithRetry_DelayBetweenRetries(t *testing.T) {
 
 	elapsed := time.Since(start)
 
-	assert.NoError(t, err, "Expected success before max attempts")
+	require.NoError(t, err, "Expected success before max attempts")
 	assert.GreaterOrEqual(t, elapsed.Seconds(), 2.0, "Expected at least 2 seconds of delay between all retries")
 	assert.LessOrEqual(t, elapsed.Seconds(), 2.5, "Expected at most 2.5 seconds of delay between all retries")
 }
@@ -50,7 +51,7 @@ func TestWithRetry_NoRetriesOnImmediateSuccess(t *testing.T) {
 		return nil
 	}, 5) // 5 attempts, 2-second delay
 
-	assert.NoError(t, err, "Expected no error when function succeeds immediately")
+	require.NoError(t, err, "Expected no error when function succeeds immediately")
 	assert.Equal(t, 1, counter, "Expected function to run only once without retries")
 }
 
@@ -71,7 +72,7 @@ func TestWithRetry_SuccessAfterRetries(t *testing.T) {
 		return nil
 	}, 3) // 3 attempts, 1-second delay
 
-	assert.NoError(t, err, "Expected success before max attempts")
+	require.NoError(t, err, "Expected success before max attempts")
 	assert.Equal(t, 2, counter, "Expected function to retry once before success")
 }
 
@@ -89,6 +90,6 @@ func TestWithRetry_MaxAttemptsFailure(t *testing.T) {
 		return errors.New("test error")
 	}, 3) // 3 attempts, 1-second delay
 
-	assert.Error(t, err, "Expected an error after max attempts")
+	require.Error(t, err, "Expected an error after max attempts")
 	assert.Equal(t, 3, counter, "Expected function to be retried 3 times")
 }

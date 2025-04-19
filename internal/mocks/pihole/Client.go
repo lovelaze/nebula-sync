@@ -36,12 +36,12 @@ func (_m *Client) EXPECT() *Client_Expecter {
 	return &Client_Expecter{mock: &_m.Mock}
 }
 
-// ApiPath provides a mock function for the type Client
-func (_mock *Client) ApiPath(target string) string {
+// APIPath provides a mock function for the type Client
+func (_mock *Client) APIPath(target string) string {
 	ret := _mock.Called(target)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ApiPath")
+		panic("no return value specified for APIPath")
 	}
 
 	var r0 string
@@ -53,30 +53,30 @@ func (_mock *Client) ApiPath(target string) string {
 	return r0
 }
 
-// Client_ApiPath_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ApiPath'
-type Client_ApiPath_Call struct {
+// Client_APIPath_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'APIPath'
+type Client_APIPath_Call struct {
 	*mock.Call
 }
 
-// ApiPath is a helper method to define mock.On call
+// APIPath is a helper method to define mock.On call
 //   - target
-func (_e *Client_Expecter) ApiPath(target interface{}) *Client_ApiPath_Call {
-	return &Client_ApiPath_Call{Call: _e.mock.On("ApiPath", target)}
+func (_e *Client_Expecter) APIPath(target interface{}) *Client_APIPath_Call {
+	return &Client_APIPath_Call{Call: _e.mock.On("APIPath", target)}
 }
 
-func (_c *Client_ApiPath_Call) Run(run func(target string)) *Client_ApiPath_Call {
+func (_c *Client_APIPath_Call) Run(run func(target string)) *Client_APIPath_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(string))
 	})
 	return _c
 }
 
-func (_c *Client_ApiPath_Call) Return(s string) *Client_ApiPath_Call {
+func (_c *Client_APIPath_Call) Return(s string) *Client_APIPath_Call {
 	_c.Call.Return(s)
 	return _c
 }
 
-func (_c *Client_ApiPath_Call) RunAndReturn(run func(target string) string) *Client_ApiPath_Call {
+func (_c *Client_APIPath_Call) RunAndReturn(run func(target string) string) *Client_APIPath_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -231,61 +231,6 @@ func (_c *Client_GetTeleporter_Call) Return(bytes []byte, err error) *Client_Get
 }
 
 func (_c *Client_GetTeleporter_Call) RunAndReturn(run func() ([]byte, error)) *Client_GetTeleporter_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// GetVersion provides a mock function for the type Client
-func (_mock *Client) GetVersion() (*model.VersionResponse, error) {
-	ret := _mock.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetVersion")
-	}
-
-	var r0 *model.VersionResponse
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func() (*model.VersionResponse, error)); ok {
-		return returnFunc()
-	}
-	if returnFunc, ok := ret.Get(0).(func() *model.VersionResponse); ok {
-		r0 = returnFunc()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.VersionResponse)
-		}
-	}
-	if returnFunc, ok := ret.Get(1).(func() error); ok {
-		r1 = returnFunc()
-	} else {
-		r1 = ret.Error(1)
-	}
-	return r0, r1
-}
-
-// Client_GetVersion_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetVersion'
-type Client_GetVersion_Call struct {
-	*mock.Call
-}
-
-// GetVersion is a helper method to define mock.On call
-func (_e *Client_Expecter) GetVersion() *Client_GetVersion_Call {
-	return &Client_GetVersion_Call{Call: _e.mock.On("GetVersion")}
-}
-
-func (_c *Client_GetVersion_Call) Run(run func()) *Client_GetVersion_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *Client_GetVersion_Call) Return(versionResponse *model.VersionResponse, err error) *Client_GetVersion_Call {
-	_c.Call.Return(versionResponse, err)
-	return _c
-}
-
-func (_c *Client_GetVersion_Call) RunAndReturn(run func() (*model.VersionResponse, error)) *Client_GetVersion_Call {
 	_c.Call.Return(run)
 	return _c
 }

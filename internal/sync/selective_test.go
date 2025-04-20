@@ -3,11 +3,12 @@ package sync
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestTarget_SelectiveSync(t *testing.T) {

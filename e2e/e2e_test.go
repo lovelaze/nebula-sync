@@ -1,9 +1,11 @@
 package e2e
 
 import (
-	"github.com/lovelaze/nebula-sync/internal/service"
-	"github.com/stretchr/testify/suite"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"github.com/lovelaze/nebula-sync/internal/service"
 )
 
 type testSuite struct {

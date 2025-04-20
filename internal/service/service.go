@@ -2,15 +2,16 @@ package service
 
 import (
 	"fmt"
-	"github.com/lovelaze/nebula-sync/internal/sync/retry"
-	"github.com/lovelaze/nebula-sync/internal/webhook"
+
+	"github.com/robfig/cron/v3"
+	"github.com/rs/zerolog/log"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/sync"
+	"github.com/lovelaze/nebula-sync/internal/sync/retry"
+	"github.com/lovelaze/nebula-sync/internal/webhook"
 	"github.com/lovelaze/nebula-sync/version"
-	"github.com/robfig/cron/v3"
-	"github.com/rs/zerolog/log"
 )
 
 type Service struct {

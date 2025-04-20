@@ -6,18 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/lovelaze/nebula-sync/version"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"io"
 	"mime/multipart"
 	"net/http"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"github.com/lovelaze/nebula-sync/version"
 )
 
-var (
-	userAgent = fmt.Sprintf("nebula-sync/%s", version.Version)
-)
+var userAgent = fmt.Sprintf("nebula-sync/%s", version.Version)
 
 type Client interface {
 	PostAuth() error
@@ -71,8 +71,12 @@ func (client *client) PostAuth() error {
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, client.APIPath("/auth"), bytes.NewReader(reqBytes))
-
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPost,
+		client.APIPath("/auth"),
+		bytes.NewReader(reqBytes),
+	)
 	if err != nil {
 		return client.wrapError(err, req)
 	}
@@ -264,7 +268,12 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 		return client.wrapError(err, nil)
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPatch, client.APIPath("config"), bytes.NewReader(reqBytes))
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		http.MethodPatch,
+		client.APIPath("config"),
+		bytes.NewReader(reqBytes),
+	)
 	if err != nil {
 		return client.wrapError(err, req)
 	}

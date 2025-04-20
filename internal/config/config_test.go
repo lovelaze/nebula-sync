@@ -3,9 +3,10 @@ package config
 import (
 	"testing"
 
-	"github.com/lovelaze/nebula-sync/internal/sync/filter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lovelaze/nebula-sync/internal/sync/filter"
 )
 
 func TestConfig_Load(t *testing.T) {

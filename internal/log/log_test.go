@@ -1,9 +1,10 @@
 package log
 
 import (
+	"testing"
+
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInit_info(t *testing.T) {

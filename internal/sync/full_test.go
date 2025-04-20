@@ -3,12 +3,13 @@ package sync
 import (
 	"testing"
 
-	"github.com/lovelaze/nebula-sync/internal/config"
-	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
-	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lovelaze/nebula-sync/internal/config"
+	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
+	"github.com/lovelaze/nebula-sync/internal/pihole"
 )
 
 func TestTarget_FullSync(t *testing.T) {

@@ -2,11 +2,12 @@ package retry
 
 import (
 	"fmt"
-	"github.com/lovelaze/nebula-sync/internal/config"
 	"time"
 
 	"github.com/avast/retry-go"
 	"github.com/rs/zerolog/log"
+
+	"github.com/lovelaze/nebula-sync/internal/config"
 )
 
 const (
@@ -17,9 +18,7 @@ const (
 	AttemptsDeleteSession  = 3
 )
 
-var (
-	delay time.Duration
-)
+var delay time.Duration
 
 func Init(clientConfig *config.Client) {
 	delay = time.Duration(clientConfig.RetryDelay) * time.Second

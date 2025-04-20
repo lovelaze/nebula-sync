@@ -3,10 +3,11 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/docker/go-connections/nat"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"time"
 )
 
 const startupTimeout = 30 * time.Second

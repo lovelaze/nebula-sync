@@ -3,14 +3,16 @@ package pihole
 import (
 	"context"
 	"fmt"
-	"github.com/lovelaze/nebula-sync/e2e"
-	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"net/http"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tc "github.com/testcontainers/testcontainers-go"
-	"net/http"
-	"testing"
+
+	"github.com/lovelaze/nebula-sync/e2e"
+	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 )
 
 const (
@@ -93,7 +95,8 @@ func (suite *clientTestSuite) TestClient_PatchConfig() {
 			Database: nil,
 			Misc:     nil,
 			Debug:    nil,
-		}}
+		},
+	}
 	err := suite.client.PatchConfig(&request)
 
 	suite.Require().NoError(err)

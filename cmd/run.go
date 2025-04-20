@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/lovelaze/nebula-sync/internal/service"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/lovelaze/nebula-sync/internal/config"
+	"github.com/lovelaze/nebula-sync/internal/service"
 )
 
 var envFile string

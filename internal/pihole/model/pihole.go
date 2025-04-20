@@ -3,9 +3,10 @@ package model
 import (
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"net/url"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 type PiHole struct {
@@ -37,7 +38,6 @@ func (ph *PiHole) Decode(value string) error {
 	}
 
 	parsedURL, err := url.Parse(uri)
-
 	if err != nil {
 		return fmt.Errorf("parse url: %w", err)
 	}

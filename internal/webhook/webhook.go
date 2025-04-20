@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	"github.com/lovelaze/nebula-sync/version"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -32,7 +33,8 @@ func NewClient(c *config.WebhookSettings) *Client {
 			Timeout: timeout,
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.Client.SkipTLSVerification},
-			}},
+			},
+		},
 	}
 }
 
@@ -68,7 +70,12 @@ func invoke(client *http.Client, settings config.WebhookRequest) error {
 		Interface("headers", settings.Headers).
 		Msg("Invoking webhook")
 
-	req, err := http.NewRequestWithContext(context.Background(), settings.Method, settings.URL, strings.NewReader(settings.Body))
+	req, err := http.NewRequestWithContext(
+		context.Background(),
+		settings.Method,
+		settings.URL,
+		strings.NewReader(settings.Body),
+	)
 	if err != nil {
 		return fmt.Errorf("create webhook request: %w", err)
 	}

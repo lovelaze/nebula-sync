@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"os"
 	"strings"
+
+	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 )
 
 func (c *Config) loadTargets() error {
@@ -70,7 +71,7 @@ func parseMultiple(values []string) ([]model.PiHole, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		replicas = append(replicas, *ph)
 	}
 	return replicas, nil

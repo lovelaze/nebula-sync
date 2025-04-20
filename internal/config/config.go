@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
+
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/lovelaze/nebula-sync/internal/sync/filter"
 )
@@ -11,17 +12,17 @@ import (
 type Config struct {
 	Primary  model.PiHole   `required:"true" envconfig:"PRIMARY"`
 	Replicas []model.PiHole `required:"true" envconfig:"REPLICAS"`
-	Client   *Client        `ignored:"true"`
-	Sync     *Sync          `ignored:"true"`
+	Client   *Client        `                                     ignored:"true"`
+	Sync     *Sync          `                                     ignored:"true"`
 }
 
 type Sync struct {
 	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
-	Cron            *string `envconfig:"CRON"`
-	RunGravity      bool    `default:"false" envconfig:"RUN_GRAVITY"`
+	Cron            *string `                envconfig:"CRON"`
+	RunGravity      bool    `                envconfig:"RUN_GRAVITY" default:"false"`
 	GravitySettings *GravitySettings
-	ConfigSettings  *ConfigSettings  `ignored:"true"`
-	WebhookSettings *WebhookSettings `ignored:"true"`
+	ConfigSettings  *ConfigSettings  `                                                        ignored:"true"`
+	WebhookSettings *WebhookSettings `                                                        ignored:"true"`
 }
 
 type GravitySettings struct {
@@ -49,28 +50,28 @@ type ConfigSettings struct {
 
 type RawConfigSettings struct {
 	DNS             bool     `default:"false" envconfig:"SYNC_CONFIG_DNS"`
-	DNSInclude      []string `envconfig:"SYNC_CONFIG_DNS_INCLUDE"`
-	DNSExclude      []string `envconfig:"SYNC_CONFIG_DNS_EXCLUDE"`
+	DNSInclude      []string `                envconfig:"SYNC_CONFIG_DNS_INCLUDE"`
+	DNSExclude      []string `                envconfig:"SYNC_CONFIG_DNS_EXCLUDE"`
 	DHCP            bool     `default:"false" envconfig:"SYNC_CONFIG_DHCP"`
-	DHCPInclude     []string `envconfig:"SYNC_CONFIG_DHCP_INCLUDE"`
-	DHCPExclude     []string `envconfig:"SYNC_CONFIG_DHCP_EXCLUDE"`
+	DHCPInclude     []string `                envconfig:"SYNC_CONFIG_DHCP_INCLUDE"`
+	DHCPExclude     []string `                envconfig:"SYNC_CONFIG_DHCP_EXCLUDE"`
 	NTP             bool     `default:"false" envconfig:"SYNC_CONFIG_NTP"`
-	NTPInclude      []string `envconfig:"SYNC_CONFIG_NTP_INCLUDE"`
-	NTPExclude      []string `envconfig:"SYNC_CONFIG_NTP_EXCLUDE"`
+	NTPInclude      []string `                envconfig:"SYNC_CONFIG_NTP_INCLUDE"`
+	NTPExclude      []string `                envconfig:"SYNC_CONFIG_NTP_EXCLUDE"`
 	Resolver        bool     `default:"false" envconfig:"SYNC_CONFIG_RESOLVER"`
-	ResolverInclude []string `envconfig:"SYNC_CONFIG_RESOLVER_INCLUDE"`
-	ResolverExclude []string `envconfig:"SYNC_CONFIG_RESOLVER_EXCLUDE"`
+	ResolverInclude []string `                envconfig:"SYNC_CONFIG_RESOLVER_INCLUDE"`
+	ResolverExclude []string `                envconfig:"SYNC_CONFIG_RESOLVER_EXCLUDE"`
 	Database        bool     `default:"false" envconfig:"SYNC_CONFIG_DATABASE"`
-	DatabaseInclude []string `envconfig:"SYNC_CONFIG_DATABASE_INCLUDE"`
-	DatabaseExclude []string `envconfig:"SYNC_CONFIG_DATABASE_EXCLUDE"`
-	Webserver       bool     `default:"false" ignored:"true"` // ignore for now
-	Files           bool     `default:"false" ignored:"true"` // ignore for now
+	DatabaseInclude []string `                envconfig:"SYNC_CONFIG_DATABASE_INCLUDE"`
+	DatabaseExclude []string `                envconfig:"SYNC_CONFIG_DATABASE_EXCLUDE"`
+	Webserver       bool     `default:"false"                                          ignored:"true"` // ignore for now
+	Files           bool     `default:"false"                                          ignored:"true"` // ignore for now
 	Misc            bool     `default:"false" envconfig:"SYNC_CONFIG_MISC"`
-	MiscInclude     []string `envconfig:"SYNC_CONFIG_MISC_INCLUDE"`
-	MiscExclude     []string `envconfig:"SYNC_CONFIG_MISC_EXCLUDE"`
+	MiscInclude     []string `                envconfig:"SYNC_CONFIG_MISC_INCLUDE"`
+	MiscExclude     []string `                envconfig:"SYNC_CONFIG_MISC_EXCLUDE"`
 	Debug           bool     `default:"false" envconfig:"SYNC_CONFIG_DEBUG"`
-	DebugInclude    []string `envconfig:"SYNC_CONFIG_DEBUG_INCLUDE"`
-	DebugExclude    []string `envconfig:"SYNC_CONFIG_DEBUG_EXCLUDE"`
+	DebugInclude    []string `                envconfig:"SYNC_CONFIG_DEBUG_INCLUDE"`
+	DebugExclude    []string `                envconfig:"SYNC_CONFIG_DEBUG_EXCLUDE"`
 }
 
 func (raw *RawConfigSettings) Validate() error {

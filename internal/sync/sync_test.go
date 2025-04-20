@@ -3,11 +3,12 @@ package sync
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_target_authenticate(t *testing.T) {

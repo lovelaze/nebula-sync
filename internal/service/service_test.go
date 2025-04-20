@@ -4,10 +4,11 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/lovelaze/nebula-sync/internal/config"
 	syncmock "github.com/lovelaze/nebula-sync/internal/mocks/sync"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRun_full(t *testing.T) {

@@ -2,12 +2,13 @@ package retry
 
 import (
 	"errors"
-	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/lovelaze/nebula-sync/internal/config"
 )
 
 // Test that the retries are actually causing the expected

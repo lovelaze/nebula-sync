@@ -6,10 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/lovelaze/nebula-sync/internal/config"
-	"github.com/lovelaze/nebula-sync/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lovelaze/nebula-sync/internal/config"
+	"github.com/lovelaze/nebula-sync/version"
 )
 
 func TestWebhook(t *testing.T) {

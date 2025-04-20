@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/lovelaze/nebula-sync/cmd"
 	"os"
+
+	"github.com/lovelaze/nebula-sync/cmd"
 )
 
 func main() {

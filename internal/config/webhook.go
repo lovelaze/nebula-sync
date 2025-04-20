@@ -19,7 +19,7 @@ type WebhookClient struct {
 type WebhookRequest struct {
 	Body    string            `envconfig:"BODY"`
 	Headers map[string]string `envconfig:"HEADERS"`
-	Method  string            `default:"POST" envconfig:"METHOD"`
+	Method  string            `envconfig:"METHOD"  default:"POST"`
 	URL     string            `envconfig:"URL"`
 }
 

@@ -11,7 +11,10 @@ func TestWebhookSettings_Load_Success(t *testing.T) {
 	t.Setenv("WEBHOOK_SYNC_SUCCESS_URL", "http://success.example.com")
 	t.Setenv("WEBHOOK_SYNC_SUCCESS_METHOD", "POST")
 	t.Setenv("WEBHOOK_SYNC_SUCCESS_BODY", "{\"status\":\"ok\"}")
-	t.Setenv("WEBHOOK_SYNC_SUCCESS_HEADERS", "Content-Type:application/json,Authorization:Bearer token,X-Custom-Header: CustomValue")
+	t.Setenv(
+		"WEBHOOK_SYNC_SUCCESS_HEADERS",
+		"Content-Type:application/json,Authorization:Bearer token,X-Custom-Header: CustomValue",
+	)
 
 	conf := Config{
 		Sync: &Sync{},

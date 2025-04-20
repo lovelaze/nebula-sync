@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"github.com/spf13/cobra"
+
 	"github.com/lovelaze/nebula-sync/internal/log"
 	"github.com/lovelaze/nebula-sync/version"
-	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{

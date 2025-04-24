@@ -1,13 +1,13 @@
 all: false
 dir: 'internal/mocks/{{.SrcPackageName}}'
-filename: '{{.InterfaceName}}.go'
+filename: 'mock_{{lower .InterfaceName}}.go'
 force-file-write: true
 formatter: goimports
 structname: '{{.InterfaceName}}'
 pkgname: '{{.SrcPackageName}}'
 template: testify
 packages:
-  github.com/lovelaze/nebula-sync:
+  github.com/lovelaze/nebula-sync/internal:
     config:
       all: true
       recursive: true

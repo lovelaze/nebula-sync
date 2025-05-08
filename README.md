@@ -43,6 +43,9 @@ services:
     environment:
     - PRIMARY=http://ph1.example.com|password
     - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
+    # If your Pi-hole instances are not using a password, you still need to include | but leave the password empty
+    # e.g. - PRIMARY=http://ph1.example.com|
+    #      - REPLICAS=http://ph2.example.com|,http://ph3.example.com|
     - FULL_SYNC=true
     - RUN_GRAVITY=true
     - CRON=0 * * * *
@@ -74,6 +77,8 @@ The following environment variables can be specified:
 | `PRIMARY` | n/a     | `http://ph1.example.com\|password`                       | Specifies the primary Pi-hole configuration              |
 | `REPLICAS`| n/a     | `http://ph2.example.com\|password,http://ph3.example.com\|password` | Specifies the list of replica Pi-hole configurations     |
 | `FULL_SYNC` | n/a   | `true`                                           | Specifies whether to perform a full synchronization      |
+
+> **Note:** If your Pi-hole instances are not using a password, you still need to include `|` but leave the password empty. e.g. `http://ph1.example.com|`
 
 > **Note:** When `FULL_SYNC=true`, the system will perform a full Teleporter import/export from the primary Pi-hole to the replicas. This will synchronize all settings and configurations.
 

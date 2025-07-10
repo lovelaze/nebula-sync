@@ -1,0 +1,82 @@
+name: Bug Report
+description: File a bug report.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behaviour
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: input
+    id: ns-version
+    attributes:
+      label: Nebula-sync Version
+      description: What version of nebula-sync are you running?
+    validations:
+      required: true
+  - type: dropdown
+    id: ns-runtime
+    attributes:
+      label: Runtime
+      description: How are you running nebula-sync?
+      options:
+        - docker
+        - binary
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What Operating System are you running? `cat /etc/os-release`
+    validations:
+      required: true
+  - type: input
+    id: cpu-arch
+    attributes:
+      label: CPU Architecture
+      description: What is the architecture of your CPU? `uname -m`
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: |
+        - How did you configure nebula-sync?
+        - Please provide your configuration
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Please copy and paste any relevant **debug** log output. This will be automatically formatted into code, so no need for backticks.
+        Enable debug logs by defining the following environment variable `NS_DEBUG=true`.
+        
+        Please also check Pi-hole logs and paste any relevant logs/errors to this issue.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: ph-version
+    attributes:
+      label: Pi-hole Version
+      description: What version(s) of Pi-hole are you running?
+    validations:
+      required: true

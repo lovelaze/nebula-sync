@@ -183,6 +183,7 @@ By default, the Docker container runs as user `1001`. If you are using Docker se
 
 ### App passwords and authentication errors
 When using Pi-hole's app passwords ("Configure app password" in the Web interface / API settings page) with nebula-sync, you should enable the Pi-hole setting `webserver.api.app_sudo` on your `REPLICAS` servers or you may receive authentication errors. To configure this setting, perform one of the following:
+- From the command line, execute `sudo pihole-FTL --config webserver.api.app_sudo true`. Repeat for each replica.
 - From the Pi-hole web UI, go to Settings -> All Settings. Toggle the "Modified settings / All settings" slider in the upper right to show "All settings". Choose the "Webserver and API" section. Check the "Enabled" box under `webserver.api.app_sudo` and then click "Save & Apply". Repeat for each replica.
 - With the text editor of your choice, edit the `/etc/pihole/pihole.toml` file. Find the `app_sudo = false` line under `[webserver.api]` and modify it to read `app_sudo = true`. Save the file and restart the pihole-FTL service. Repeat for each replica.
 

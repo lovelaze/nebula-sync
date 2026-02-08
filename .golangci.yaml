@@ -311,6 +311,10 @@ linters:
           disabled: true
         - name: deep-exit
           disabled: true
+        - name: enforce-switch-style
+          disabled: true
+        - name: var-naming
+          arguments: [[], [], [{ skip-package-name-checks: true }]]
 
     gosec:
       excludes:

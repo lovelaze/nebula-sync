@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/docker/go-connections/nat"
 	tc "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -29,7 +28,7 @@ func (c *PiHoleContainer) ConnectionString(ssl bool) string {
 		port = "80/tcp"
 	}
 
-	mappedPort, err := c.Container.MappedPort(context.Background(), nat.Port(port))
+	mappedPort, err := c.Container.MappedPort(context.Background(), port)
 	if err != nil {
 		panic(err)
 	}

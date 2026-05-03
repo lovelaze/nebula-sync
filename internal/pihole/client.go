@@ -66,7 +66,7 @@ func (client *client) PostAuth() error {
 	client.logger.Debug().Msg("PostAuth")
 	authResponse := model.AuthResponse{}
 
-	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.piHole.Password})
+	reqBytes, err := json.Marshal(model.AuthRequest{Password: client.piHole.Password}) //nolint:gosec // mirror API model
 	if err != nil {
 		return client.wrapError(err, nil)
 	}

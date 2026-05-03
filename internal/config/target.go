@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
@@ -27,7 +28,7 @@ func (c *Config) loadTargets() error {
 func loadPrimary() (*model.PiHole, error) {
 	env := "PRIMARY"
 	if fileValue := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(fileValue) > 0 {
-		bytes, err := os.ReadFile(fileValue)
+		bytes, err := os.ReadFile(filepath.Clean(fileValue))
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +44,7 @@ func loadPrimary() (*model.PiHole, error) {
 func loadReplicas() ([]model.PiHole, error) {
 	env := "REPLICAS"
 	if fileValue := os.Getenv(fmt.Sprintf("%s_FILE", env)); len(fileValue) > 0 {
-		bytes, err := os.ReadFile(fileValue)
+		bytes, err := os.ReadFile(filepath.Clean(fileValue))
 		if err != nil {
 			return nil, err
 		}

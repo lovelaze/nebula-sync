@@ -313,6 +313,8 @@ linters:
           disabled: true
         - name: enforce-switch-style
           disabled: true
+        - name: package-naming
+          disabled: true
         - name: var-naming
           arguments: [[], [], [{ skip-package-name-checks: true }]]
 

@@ -3,8 +3,172 @@ services:
   nebula-sync:
     image: ghcr.io/lovelaze/nebula-sync:latest
     container_name: nebula-sync
+    restart: unless-stopped
+
+    # You may use Docker secrets to store your primary and replica Pi-hole credentials.
+    # See `secrets` section below for required configuration.
+    # secrets:
+    #   - primary
+    #   - replicas
+    # You will also need to configure the following environment variables below:
+    # environment:
+    #   - PRIMARY_FILE=/run/secrets/primary
+    #   - REPLICAS_FILE=/run/secrets/replicas
+
+    # You may specify a user and group to run the container as.
+    # If you are using Docker secrets files, this user must have the proper permissions to read the files.
+    # user: 1234:1234
+
+    # You may specify a volume to mount the configuration files to.
+    # volumes:
+    #   - ./config:/app/config
+
     environment:
+      ################################
+      # REQUIRED ENVIRONMENT VARIABLES
+      ################################
+
       - PRIMARY=http://ph1.example.com|password
       - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
+      # If you only have 1 replica, you may omit the comma.
+      # - REPLICAS=http://ph2.example.com|password
+      # If your Pi-hole instances are not using a password, you still need to include | but leave the password empty
+      # e.g. - PRIMARY=http://ph1.example.com|
+      #      - REPLICAS=http://ph2.example.com|,http://ph3.example.com|
+
+      # When FULL_SYNC=true, the system will perform a full Teleporter import/export from the primary Pi-hole to the replicas.
+      # This will synchronize all settings and configurations.
       - FULL_SYNC=true
-      - CRON=0 * * * *
+      # If you want to specify which settings to sync, you can set FULL_SYNC to false and then use the individual SYNC_* variables below.
+
+      ################################
+      # OPTIONAL ENVIRONMENT VARIABLES
+      ################################
+
+      # Specifies the cron schedule for synchronization
+      # - CRON=0 * * * *
+
+      # Specifies whether to run gravity after syncing
+      # - RUN_GRAVITY=true
+
+      # Specifies the timezone for logs and cron
+      # - TZ=America/New_York
+
+      # Specifies whether to skip TLS certificate verification on your Pi-hole instances
+      # - CLIENT_SKIP_TLS_VERIFICATION=false
+
+      # Specifies the delay between connection attempts
+      # - CLIENT_RETRY_DELAY_SECONDS=1
+
+      # Specifies the timeout for HTTP requests
+      # - CLIENT_TIMEOUT_SECONDS=20
+
+      ###########################
+      # INDIVIDUAL SYNC VARIABLES
+      # Used when FULL_SYNC=false
+      ###########################
+
+      # Specifies whether to synchronize DNS settings
+      # - SYNC_CONFIG_DNS=true
+
+      # Specifies whether to synchronize DHCP settings
+      # - SYNC_CONFIG_DHCP=true
+
+      # Specifies whether to synchronize NTP settings
+      # - SYNC_CONFIG_NTP=true
+
+      # Specifies whether to synchronize resolver settings
+      # - SYNC_CONFIG_RESOLVER=true
+
+      # Specifies whether to synchronize database settings
+      # - SYNC_CONFIG_DATABASE=true
+
+      # Specifies whether to synchronize miscellaneous settings
+      # - SYNC_CONFIG_MISC=true
+
+      # Specifies whether to synchronize debug settings
+      # - SYNC_CONFIG_DEBUG=true
+
+      # Specifies whether to synchronize DHCP leases
+      # - SYNC_GRAVITY_DHCP_LEASES=true
+
+      # Specifies whether to synchronize groups
+      # - SYNC_GRAVITY_GROUP=true
+
+      # Specifies whether to synchronize ad lists
+      # - SYNC_GRAVITY_AD_LIST=true
+
+      # Specifies whether to synchronize ad lists by group
+      # - SYNC_GRAVITY_AD_LIST_BY_GROUP=true
+
+      # Specifies whether to synchronize domain lists
+      # - SYNC_GRAVITY_DOMAIN_LIST=true
+
+      # Specifies whether to synchronize domain lists by group
+      # - SYNC_GRAVITY_DOMAIN_LIST_BY_GROUP=true
+
+      # Specifies whether to synchronize clients
+      # - SYNC_GRAVITY_CLIENT=true
+
+      # Specifies whether to synchronize clients by group
+      # - SYNC_GRAVITY_CLIENT_BY_GROUP=true
+
+      # Specifies whether to synchronize DNS settings
+      # - SYNC_CONFIG_DNS_INCLUDE=upstreams,interface
+      # - SYNC_CONFIG_DNS_EXCLUDE=upstreams,interface
+
+      # Specifies whether to synchronize DHCP settings
+      # - SYNC_CONFIG_DHCP_INCLUDE=active,start
+      # - SYNC_CONFIG_DHCP_EXCLUDE=active,start
+
+      # Specifies whether to synchronize NTP settings
+      # - SYNC_CONFIG_NTP_INCLUDE=ipv4,sync
+      # - SYNC_CONFIG_NTP_EXCLUDE=ipv4,sync
+
+      # Specifies whether to synchronize resolver settings
+      # - SYNC_CONFIG_RESOLVER_INCLUDE=resolveIPv4,networkNames
+      # - SYNC_CONFIG_RESOLVER_EXCLUDE=resolveIPv4,networkNames
+
+      # Specifies whether to synchronize database settings
+      # - SYNC_CONFIG_DATABASE_INCLUDE=DBimport,maxDBdays
+      # - SYNC_CONFIG_DATABASE_EXCLUDE=DBimport,maxDBdays
+
+      # Specifies whether to synchronize miscellaneous settings
+      # - SYNC_CONFIG_MISC_INCLUDE=nice,delay_startup
+      # - SYNC_CONFIG_MISC_EXCLUDE=nice,delay_startup
+
+      # Specifies whether to synchronize debug settings
+      # - SYNC_CONFIG_DEBUG_INCLUDE=database,networking
+      # - SYNC_CONFIG_DEBUG_EXCLUDE=database,networking
+
+      ############################
+      # OPTIONAL WEBHOOK VARIABLES
+      ############################
+
+      # Nebula Sync can invoke webhooks depending if a sync succeeded or failed.
+      # URL is required for the webhook to trigger.
+      # Both success and failure webhooks use the same environment variable pattern.
+      # Webhooks have a timeout of 10 seconds.
+
+      # Success webhook
+      # - WEBHOOK_SYNC_SUCCESS_URL=https://www.example.com/webhook
+      # - WEBHOOK_SYNC_SUCCESS_METHOD=POST
+      # - WEBHOOK_SYNC_SUCCESS_BODY=this is my webhook body
+      # - WEBHOOK_SYNC_SUCCESS_HEADERS=header1:foo,header2:bar
+
+      # Failure webhook
+      # - WEBHOOK_SYNC_FAILURE_URL=https://www.example.com/webhook
+      # - WEBHOOK_SYNC_FAILURE_METHOD=POST
+      # - WEBHOOK_SYNC_FAILURE_BODY=this is my webhook body
+      # - WEBHOOK_SYNC_FAILURE_HEADERS=header1:foo,header2:bar
+
+      # Specifies whether to skip TLS certificate verification for ALL webhooks
+      # - WEBHOOK_CLIENT_SKIP_TLS_VERIFICATION=false
+
+# You may use Docker secrets to store your primary and replica Pi-hole credentials.
+# See `secrets` section above for corresponding configuration.
+# secrets:
+#   primary:
+#     file: ./secrets/primary.txt
+#   replicas:
+#     file: ./secrets/replicas.txt

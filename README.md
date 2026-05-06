@@ -44,9 +44,9 @@ services:
     - PRIMARY=http://ph1.example.com|password
     - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password
     - FULL_SYNC=true
-    - RUN_GRAVITY=true
-    - CRON=0 * * * *
 ```
+
+> **Note:** This example only includes the **required** environment variables. Please refer to the [examples](https://github.com/lovelaze/nebula-sync/tree/main/examples) for more detailed examples.
 
 ### Docker CLI
 
@@ -56,7 +56,6 @@ docker run --rm \
   -e PRIMARY="http://ph1.example.com|password" \
   -e REPLICAS="http://ph2.example.com|password" \
   -e FULL_SYNC=true \
-  -e RUN_GRAVITY=true \
   ghcr.io/lovelaze/nebula-sync:latest
 ```
 
@@ -74,6 +73,8 @@ The following environment variables can be specified:
 | `PRIMARY` | n/a     | `http://ph1.example.com\|password`                       | Specifies the primary Pi-hole configuration              |
 | `REPLICAS`| n/a     | `http://ph2.example.com\|password,http://ph3.example.com\|password` | Specifies the list of replica Pi-hole configurations     |
 | `FULL_SYNC` | n/a   | `true`                                           | Specifies whether to perform a full synchronization      |
+
+> **Note:** If your Pi-hole instances are not using a password, you still need to include `|` but leave the password empty. e.g. `http://ph1.example.com|`
 
 > **Note:** When `FULL_SYNC=true`, the system will perform a full Teleporter import/export from the primary Pi-hole to the replicas. This will synchronize all settings and configurations.
 
@@ -179,7 +180,7 @@ WEBHOOK_SYNC_FAILURE_HEADERS=Content-Type:application/json
 ## Notes / Known issues
 
 ### Default user of Docker container / Docker secrets example
-By default, the Docker container runs as user `1001`. If you are using Docker secrets, the user that is running the container will need read permissions to the files that the Docker secrets reference. If the user does not have the right permissions you will receive an error `Failed to initialize service error="open /run/secrets/primary: permission denied"`. To avoid this error, either make sure to `chown 1001 ./your/secretfiles && chmod 400 ./your/secretfiles` or use the [`user` directive in Docker Compose](https://docs.docker.com/reference/compose-file/services/#user) to change the user that the container runs as to a user of your choice - and then make sure to update your secret files' ownership to that user. In the example [docker-compose-with-secrets.yml](examples/docker-compose-with-secrets.yml), user `1234` owns `./secrets/primary.txt` and `./secrets/replicas.txt` and both have `-r--------` permissions.
+By default, the Docker container runs as user `1001`. If you are using Docker secrets, the user that is running the container will need read permissions to the files that the Docker secrets reference. If the user does not have the right permissions you will receive an error `Failed to initialize service error="open /run/secrets/primary: permission denied"`. To avoid this error, either make sure to `chown 1001 ./your/secretfiles && chmod 400 ./your/secretfiles` or use the [`user` directive in Docker Compose](https://docs.docker.com/reference/compose-file/services/#user) to change the user that the container runs as to a user of your choice - and then make sure to update your secret files' ownership to that user. In the example [docker-compose.yml](examples/docker-compose.yml), user `1234` owns `./secrets/primary.txt` and `./secrets/replicas.txt` and both have `-r--------` permissions.
 
 ### App passwords and authentication errors
 When using Pi-hole's app passwords ("Configure app password" in the Web interface / API settings page) with nebula-sync, you should enable the Pi-hole setting `webserver.api.app_sudo` on your `REPLICAS` servers or you may receive authentication errors. To configure this setting, perform one of the following:

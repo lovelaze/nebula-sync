@@ -90,12 +90,12 @@ func (client *client) PostAuth() error {
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return client.wrapError(err, req)
 	}
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
 		return client.wrapError(err, req)
 	}
 
@@ -138,11 +138,16 @@ func (client *client) DeleteSession() error {
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return client.wrapError(err, req)
 	}
 
-	return client.wrapError(err, req)
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
+		return client.wrapError(err, req)
+	}
+
+	return nil
 }
 
 func (client *client) GetTeleporter() ([]byte, error) {
@@ -163,12 +168,16 @@ func (client *client) GetTeleporter() ([]byte, error) {
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return nil, client.wrapError(err, req)
 	}
 
-	body, err := io.ReadAll(response.Body)
-	return body, client.wrapError(err, req)
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
+		return nil, client.wrapError(err, req)
+	}
+
+	return body, nil
 }
 
 func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error {
@@ -214,7 +223,12 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return client.wrapError(err, req)
+	}
+
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
 		return client.wrapError(err, req)
 	}
 
@@ -241,12 +255,12 @@ func (client *client) GetConfig() (*model.ConfigResponse, error) {
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return &configResponse, client.wrapError(err, req)
 	}
 
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
 		return &configResponse, client.wrapError(err, req)
 	}
 
@@ -286,11 +300,16 @@ func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error 
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return client.wrapError(err, req)
 	}
 
-	return client.wrapError(err, req)
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
+		return client.wrapError(err, req)
+	}
+
+	return nil
 }
 
 func (client *client) PostRunGravity() error {
@@ -312,11 +331,16 @@ func (client *client) PostRunGravity() error {
 	}
 	defer response.Body.Close()
 
-	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
 		return client.wrapError(err, req)
 	}
 
-	return err
+	if err := successfulHTTPStatus(response.StatusCode, body); err != nil {
+		return client.wrapError(err, req)
+	}
+
+	return nil
 }
 
 func (client *client) String() string {
@@ -337,10 +361,10 @@ func (client *client) wrapError(err error, req *http.Request) error {
 	return nil
 }
 
-func successfulHTTPStatus(statusCode int) error {
+func successfulHTTPStatus(statusCode int, body []byte) error {
 	if statusCode >= 200 && statusCode <= 299 {
 		return nil
 	}
 
-	return fmt.Errorf("unexpected status code: %d", statusCode)
+	return fmt.Errorf("unexpected status code: %d, response body: %s", statusCode, string(body))
 }

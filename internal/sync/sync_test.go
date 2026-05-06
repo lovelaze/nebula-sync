@@ -117,9 +117,9 @@ func Test_target_syncConfigs(t *testing.T) {
 	}
 
 	primary.EXPECT().GetConfig().Once().Return(configResponse, nil)
-	replica.EXPECT().PatchConfig(createPatchConfigRequest(&gravitySettings, configResponse)).Once().Return(nil)
+	replica.EXPECT().PatchConfig(createPatchConfigRequest(&gravitySettings, configResponse, nil, nil)).Once().Return(nil)
 
-	err := target.syncConfigs(&gravitySettings)
+	err := target.syncConfigs(&gravitySettings, nil)
 	assert.NoError(t, err)
 }
 
@@ -163,6 +163,46 @@ func Test_filterPatchConfigRequest_disabled(t *testing.T) {
 		Filter:  nil,
 	}, dns)
 	assert.Nil(t, request)
+}
+
+func Test_mergeDNSRecords(t *testing.T) {
+	primaryDNS := map[string]any{
+		"hosts": []any{
+			"192.168.1.1 example.com",
+			"192.168.1.2 test.com",
+			"192.168.1.3 other.com",
+		},
+		"cnameRecords": []any{
+			"alias.example.com,example.com",
+			"alias.test.com,test.com",
+		},
+	}
+
+	replicaDNS := map[string]any{
+		"hosts": []any{
+			"192.168.1.100 example.com",
+			"192.168.1.101 test.com",
+			"192.168.1.102 replica.com",
+		},
+		"cnameRecords": []any{
+			"replica-alias.test.com,test.com",
+		},
+	}
+
+	excludeList := []string{"example.com", "test.com"}
+
+	merged := mergeDNSRecords(primaryDNS, replicaDNS, excludeList)
+
+	// Should have 1 from primary (other.com) and 2 from replica (example.com, test.com)
+	assert.Len(t, merged["hosts"].([]any), 3)
+	assert.Contains(t, merged["hosts"].([]any), "192.168.1.3 other.com")
+	assert.Contains(t, merged["hosts"].([]any), "192.168.1.100 example.com")
+	assert.Contains(t, merged["hosts"].([]any), "192.168.1.101 test.com")
+	assert.NotContains(t, merged["hosts"].([]any), "192.168.1.102 replica.com")
+
+	// Should have 0 from primary and 1 from replica
+	assert.Len(t, merged["cnameRecords"].([]any), 1)
+	assert.Equal(t, "replica-alias.test.com,test.com", merged["cnameRecords"].([]any)[0])
 }
 
 func emptyConfigResponse() *model.ConfigResponse {

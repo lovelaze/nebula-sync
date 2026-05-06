@@ -116,22 +116,23 @@ The following environment variables can be specified:
 **Note:** `The SYNC_CONFIG_*_INCLUDE` and `SYNC_CONFIG_*_EXCLUDE` settings are mutually exclusive within each section. Additionally, config filters are only applied if `FULL_SYNC=false`.\
 Config keys are relative to the section and are **case sensitive**. For example, the key `dns.upstreams` should be referred to as `upstreams`, and `dns.cache.size` should be referred to as `cache.size`.
 
-| Name                              | Example                    | Description                                     |
-|-----------------------------------|----------------------------|-------------------------------------------------|
-| `SYNC_CONFIG_DNS_INCLUDE`         | upstreams,interface        | DNS config keys to include                     |
-| `SYNC_CONFIG_DNS_EXCLUDE`         | upstreams,interface        | DNS config keys to exclude                     |
-| `SYNC_CONFIG_DHCP_INCLUDE`        | active,start               | DHCP config keys to include                    |
-| `SYNC_CONFIG_DHCP_EXCLUDE`        | active,start               | DHCP config keys to exclude                    |
-| `SYNC_CONFIG_NTP_INCLUDE`         | ipv4,sync                  | NTP config keys to include                     |
-| `SYNC_CONFIG_NTP_EXCLUDE`         | ipv4,sync                  | NTP config keys to exclude                     |
-| `SYNC_CONFIG_RESOLVER_INCLUDE`    | resolveIPv4,networkNames   | Resolver config keys to include                |
-| `SYNC_CONFIG_RESOLVER_EXCLUDE`    | resolveIPv4,networkNames   | Resolver config keys to exclude                |
-| `SYNC_CONFIG_DATABASE_INCLUDE`    | DBimport,maxDBdays         | Database config keys to include                |
-| `SYNC_CONFIG_DATABASE_EXCLUDE`    | DBimport,maxDBdays         | Database config keys to exclude                |
-| `SYNC_CONFIG_MISC_INCLUDE`        | nice,delay_startup         | Misc config keys to include                    |
-| `SYNC_CONFIG_MISC_EXCLUDE`        | nice,delay_startup         | Misc config keys to exclude                    |
-| `SYNC_CONFIG_DEBUG_INCLUDE`       | database,networking        | Debug config keys to include                   |
-| `SYNC_CONFIG_DEBUG_EXCLUDE`       | database,networking        | Debug config keys to exclude                   |
+| Name                              | Example                    | Description                                                   |
+|-----------------------------------|----------------------------|---------------------------------------------------------------|
+| `SYNC_CONFIG_DNS_INCLUDE`         | upstreams,interface        | DNS config keys to include                                    |
+| `SYNC_CONFIG_DNS_EXCLUDE`         | upstreams,interface        | DNS config keys to exclude                                    |
+| `SYNC_CONFIG_DNS_EXCLUDE_RECORDS` | example.com                | DNS records to exclude from sync (preserves them on replicas) |
+| `SYNC_CONFIG_DHCP_INCLUDE`        | active,start               | DHCP config keys to include                                   |
+| `SYNC_CONFIG_DHCP_EXCLUDE`        | active,start               | DHCP config keys to exclude                                   |
+| `SYNC_CONFIG_NTP_INCLUDE`         | ipv4,sync                  | NTP config keys to include                                    |
+| `SYNC_CONFIG_NTP_EXCLUDE`         | ipv4,sync                  | NTP config keys to exclude                                    |
+| `SYNC_CONFIG_RESOLVER_INCLUDE`    | resolveIPv4,networkNames   | Resolver config keys to include                               |
+| `SYNC_CONFIG_RESOLVER_EXCLUDE`    | resolveIPv4,networkNames   | Resolver config keys to exclude                               |
+| `SYNC_CONFIG_DATABASE_INCLUDE`    | DBimport,maxDBdays         | Database config keys to include                               |
+| `SYNC_CONFIG_DATABASE_EXCLUDE`    | DBimport,maxDBdays         | Database config keys to exclude                               |
+| `SYNC_CONFIG_MISC_INCLUDE`        | nice,delay_startup         | Misc config keys to include                                   |
+| `SYNC_CONFIG_MISC_EXCLUDE`        | nice,delay_startup         | Misc config keys to exclude                                   |
+| `SYNC_CONFIG_DEBUG_INCLUDE`       | database,networking        | Debug config keys to include                                  |
+| `SYNC_CONFIG_DEBUG_EXCLUDE`       | database,networking        | Debug config keys to exclude                                  |
 
 ### Webhooks
 

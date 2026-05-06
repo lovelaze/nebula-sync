@@ -18,12 +18,13 @@ type Config struct {
 }
 
 type Sync struct {
-	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
-	Cron            *string `                envconfig:"CRON"`
-	RunGravity      bool    `                envconfig:"RUN_GRAVITY" default:"false"`
-	GravitySettings *GravitySettings
-	ConfigSettings  *ConfigSettings  `                                                        ignored:"true"`
-	WebhookSettings *WebhookSettings `                                                        ignored:"true"`
+	FullSync          bool     `required:"true" envconfig:"FULL_SYNC"`
+	Cron              *string  `                envconfig:"CRON"`
+	RunGravity        bool     `                envconfig:"RUN_GRAVITY"                     default:"false"`
+	ExcludeDNSRecords []string `                envconfig:"SYNC_CONFIG_DNS_EXCLUDE_RECORDS"`
+	GravitySettings   *GravitySettings
+	ConfigSettings    *ConfigSettings  `                                                                            ignored:"true"`
+	WebhookSettings   *WebhookSettings `                                                                            ignored:"true"`
 }
 
 type GravitySettings struct {

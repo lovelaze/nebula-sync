@@ -20,7 +20,7 @@ func (target *target) full(conf *config.Sync) error {
 		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
-	if err := target.syncConfigs(configSettings); err != nil {
+	if err := target.syncConfigs(configSettings, conf.ExcludeDNSRecords); err != nil {
 		return fmt.Errorf("sync configs: %w", err)
 	}
 

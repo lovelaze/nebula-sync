@@ -2,6 +2,7 @@ package sync
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
@@ -103,16 +104,28 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 	return err
 }
 
-func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
+func (target *target) syncConfigs(configSettings *config.ConfigSettings, excludeDNSRecords []string) error {
 	log.Info().Msg("Syncing configs...")
-	configResponse, err := target.Primary.GetConfig()
+	primaryResponse, err := target.Primary.GetConfig()
 	if err != nil {
 		return err
 	}
 
-	configRequest := createPatchConfigRequest(configSettings, configResponse)
-
 	for _, replica := range target.Replicas {
+		var replicaResponse *model.ConfigResponse
+		if len(excludeDNSRecords) > 0 {
+			var err error
+			replicaResponse, err = replica.GetConfig()
+			if err != nil {
+				log.Warn().Err(err).Msgf(
+					"Failed to get config from replica %s, excluded records might be deleted",
+					replica.String(),
+				)
+			}
+		}
+
+		configRequest := createPatchConfigRequest(configSettings, primaryResponse, replicaResponse, excludeDNSRecords)
+
 		if err := retry.Fixed(func() error {
 			return replica.PatchConfig(configRequest)
 		}, retry.AttemptsPatchConfig); err != nil {
@@ -120,7 +133,7 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (target *target) runGravity() error {
@@ -141,32 +154,104 @@ func (target *target) runGravity() error {
 	return nil
 }
 
-func createPatchConfigRequest(config *config.ConfigSettings, configResponse *model.ConfigResponse) *model.PatchConfigRequest {
+func createPatchConfigRequest(
+	config *config.ConfigSettings,
+	primaryResponse *model.ConfigResponse,
+	replicaResponse *model.ConfigResponse,
+	excludeDNSRecords []string,
+) *model.PatchConfigRequest {
 	patchConfig := model.PatchConfig{}
 
-	if json := filterPatchConfigRequest(config.DNS, configResponse.Get("dns")); json != nil {
+	if json := filterPatchConfigRequest(config.DNS, primaryResponse.Get("dns")); json != nil {
+		if len(excludeDNSRecords) > 0 {
+			var replicaDNS map[string]any
+			if replicaResponse != nil {
+				replicaDNS = replicaResponse.Get("dns")
+			}
+			json = mergeDNSRecords(json, replicaDNS, excludeDNSRecords)
+		}
 		patchConfig.DNS = json
 	}
-	if json := filterPatchConfigRequest(config.DHCP, configResponse.Get("dhcp")); json != nil {
+	if json := filterPatchConfigRequest(config.DHCP, primaryResponse.Get("dhcp")); json != nil {
 		patchConfig.DHCP = json
 	}
-	if json := filterPatchConfigRequest(config.NTP, configResponse.Get("ntp")); json != nil {
+	if json := filterPatchConfigRequest(config.NTP, primaryResponse.Get("ntp")); json != nil {
 		patchConfig.NTP = json
 	}
-	if json := filterPatchConfigRequest(config.Resolver, configResponse.Get("resolver")); json != nil {
+	if json := filterPatchConfigRequest(config.Resolver, primaryResponse.Get("resolver")); json != nil {
 		patchConfig.Resolver = json
 	}
-	if json := filterPatchConfigRequest(config.Database, configResponse.Get("database")); json != nil {
+	if json := filterPatchConfigRequest(config.Database, primaryResponse.Get("database")); json != nil {
 		patchConfig.Database = json
 	}
-	if json := filterPatchConfigRequest(config.Misc, configResponse.Get("misc")); json != nil {
+	if json := filterPatchConfigRequest(config.Misc, primaryResponse.Get("misc")); json != nil {
 		patchConfig.Misc = json
 	}
-	if json := filterPatchConfigRequest(config.Debug, configResponse.Get("debug")); json != nil {
+	if json := filterPatchConfigRequest(config.Debug, primaryResponse.Get("debug")); json != nil {
 		patchConfig.Debug = json
 	}
 
 	return &model.PatchConfigRequest{Config: patchConfig}
+}
+
+func mergeDNSRecords(primaryDNS, replicaDNS map[string]any, excludeList []string) map[string]any {
+	if primaryDNS == nil {
+		return nil
+	}
+
+	// Create a copy to avoid modifying the original primary map
+	result := make(map[string]any)
+	for k, v := range primaryDNS {
+		result[k] = v
+	}
+
+	keysToMerge := []string{"hosts", "cnameRecords"}
+	for _, key := range keysToMerge {
+		primaryFiltered := filterDNSRecords(primaryDNS[key], excludeList, false)
+
+		var replicaExcluded []any
+		if replicaDNS != nil {
+			replicaExcluded = filterDNSRecords(replicaDNS[key], excludeList, true)
+		}
+
+		result[key] = append(primaryFiltered, replicaExcluded...)
+	}
+
+	return result
+}
+
+func filterDNSRecords(listAny any, exclude []string, keepExcluded bool) []any {
+	list, ok := listAny.([]any)
+	if !ok {
+		return nil
+	}
+
+	var filtered []any
+	for _, item := range list {
+		if shouldIncludeRecord(item, exclude, keepExcluded) {
+			filtered = append(filtered, item)
+		}
+	}
+	return filtered
+}
+
+func shouldIncludeRecord(item any, exclude []string, keepExcluded bool) bool {
+	itemStr := fmt.Sprintf("%v", item)
+	isRecordExcluded := isExcluded(itemStr, exclude)
+
+	if keepExcluded {
+		return isRecordExcluded
+	}
+	return !isRecordExcluded
+}
+
+func isExcluded(itemStr string, exclude []string) bool {
+	for _, ex := range exclude {
+		if strings.Contains(itemStr, ex) {
+			return true
+		}
+	}
+	return false
 }
 
 func filterPatchConfigRequest(setting *config.ConfigSetting, json map[string]any) map[string]any {

@@ -42,9 +42,22 @@ func (ph *PiHole) Decode(value string) error {
 		return fmt.Errorf("parse url: %w", err)
 	}
 
+	stripLegacyAdminPath(parsedURL)
+
 	*ph = PiHole{
 		URL:      parsedURL,
 		Password: password,
 	}
 	return nil
+}
+
+// stripLegacyAdminPath removes /admin and /admin/login suffixes that users often
+// copy from the Pi-hole web UI. The v6 API lives at /api on the same origin, so
+// joining those paths produces /admin/login/api/auth and auth fails.
+func stripLegacyAdminPath(u *url.URL) {
+	path := strings.TrimSuffix(u.Path, "/")
+	if strings.EqualFold(path, "/admin") || strings.EqualFold(path, "/admin/login") {
+		u.Path = ""
+		u.RawPath = ""
+	}
 }

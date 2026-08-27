@@ -15,7 +15,8 @@ const (
 	AttemptsPatchConfig    = 5
 	AttemptsPostRunGravity = 5
 	AttemptsPostAuth       = 3
-	AttemptsDeleteSession  = 3
+	// FTL often restarts after gravity, so session teardown needs more attempts.
+	AttemptsDeleteSession = 12
 )
 
 var delay time.Duration

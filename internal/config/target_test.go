@@ -60,6 +60,30 @@ func TestConfig_Load_NoPrimary(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestSplitReplicaList_PasswordWithComma(t *testing.T) {
+	got := splitReplicaList("http://localhost:1338|foo,bar,https://localhost:1339|baz")
+	require.Len(t, got, 2)
+	assert.Equal(t, "http://localhost:1338|foo,bar", got[0])
+	assert.Equal(t, "https://localhost:1339|baz", got[1])
+}
+
+func TestConfig_Load_ReplicaPasswordWithComma(t *testing.T) {
+	conf := Config{}
+
+	t.Setenv("PRIMARY", "http://localhost:1337|asdf")
+	t.Setenv("REPLICAS", "http://localhost:1338|foo,bar,http://localhost:1339|baz")
+	require.Empty(t, os.Getenv("PRIMARY_FILE"))
+	require.Empty(t, os.Getenv("REPLICAS_FILE"))
+
+	err := conf.loadTargets()
+	require.NoError(t, err)
+	require.Len(t, conf.Replicas, 2)
+	assert.Equal(t, "http://localhost:1338", conf.Replicas[0].URL.String())
+	assert.Equal(t, "foo,bar", conf.Replicas[0].Password)
+	assert.Equal(t, "http://localhost:1339", conf.Replicas[1].URL.String())
+	assert.Equal(t, "baz", conf.Replicas[1].Password)
+}
+
 func TestConfig_Load_NoReplicas(t *testing.T) {
 	conf := Config{}
 

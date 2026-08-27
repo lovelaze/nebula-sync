@@ -209,7 +209,13 @@ func (s *Sync) loadConfigSettings() error {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("%+v", *c)
+	replicas := make([]string, 0, len(c.Replicas))
+	for i := range c.Replicas {
+		replicas = append(replicas, c.Replicas[i].String())
+	}
+
+	return fmt.Sprintf("{Primary:%s Replicas:%s Client:%+v Sync:%+v API:%+v}",
+		c.Primary.String(), replicas, c.Client, c.Sync, c.API)
 }
 
 func (s *Sync) String() string {

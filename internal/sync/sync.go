@@ -67,7 +67,9 @@ func (target *target) authenticate() error {
 
 func (target *target) deleteSessions() {
 	log.Info().Msg("Invalidating sessions...")
-	if err := target.Primary.DeleteSession(); err != nil {
+	if err := retry.Fixed(func() error {
+		return target.Primary.DeleteSession()
+	}, retry.AttemptsDeleteSession); err != nil {
 		log.Warn().Msgf("Failed to invalidate session for target: %s", target.Primary.String())
 	}
 

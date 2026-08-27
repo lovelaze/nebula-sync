@@ -192,3 +192,19 @@ func TestConfig_NewConfigSetting(t *testing.T) {
 	assert.Equal(t, filter.Exclude, exclude.Filter.Type)
 	assert.Equal(t, []string{"key1", "key2"}, exclude.Filter.Keys)
 }
+
+func TestConfig_String_OmitsPasswords(t *testing.T) {
+	conf := Config{}
+	t.Setenv("PRIMARY", "http://localhost:1337|super-secret")
+	t.Setenv("REPLICAS", "http://localhost:1338|also-secret")
+	t.Setenv("FULL_SYNC", "false")
+
+	err := conf.Load()
+	require.NoError(t, err)
+
+	got := conf.String()
+	assert.NotContains(t, got, "super-secret")
+	assert.NotContains(t, got, "also-secret")
+	assert.Contains(t, got, "http://localhost:1337")
+	assert.Contains(t, got, "http://localhost:1338")
+}

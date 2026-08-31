@@ -34,16 +34,23 @@ func NewClient(c *config.WebhookSettings) *Client {
 }
 
 func newHTTPClient(skipTLSVerification bool) *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport := cloneDefaultTransport()
 	transport.TLSClientConfig = &tls.Config{
 		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: skipTLSVerification, //nolint:gosec // G402: opt-in for self-signed webhook endpoints
+		InsecureSkipVerify: skipTLSVerification,
 	}
 
 	return &http.Client{
 		Timeout:   timeout,
 		Transport: transport,
 	}
+}
+
+func cloneDefaultTransport() *http.Transport {
+	if base, ok := http.DefaultTransport.(*http.Transport); ok {
+		return base.Clone()
+	}
+	return &http.Transport{Proxy: http.ProxyFromEnvironment}
 }
 
 func (c *Client) OnSuccess() {

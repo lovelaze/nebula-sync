@@ -28,16 +28,23 @@ func (c *Config) loadClient() error {
 }
 
 func (c *Client) NewHTTPClient() *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport := cloneDefaultTransport()
 	transport.TLSClientConfig = &tls.Config{
 		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: c.SkipTLSVerification, //nolint:gosec // G402: opt-in for self-signed Pi-hole certs
+		InsecureSkipVerify: c.SkipTLSVerification,
 	}
 
 	return &http.Client{
 		Timeout:   time.Duration(c.Timeout) * time.Second,
 		Transport: transport,
 	}
+}
+
+func cloneDefaultTransport() *http.Transport {
+	if base, ok := http.DefaultTransport.(*http.Transport); ok {
+		return base.Clone()
+	}
+	return &http.Transport{Proxy: http.ProxyFromEnvironment}
 }
 
 func (c *Client) String() string {

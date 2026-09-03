@@ -4,7 +4,7 @@ go 1.26.2
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/go-chi/chi/v5 v5.2.5
+	github.com/go-chi/chi/v5 v5.3.2
 	github.com/joho/godotenv v1.5.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/robfig/cron/v3 v3.0.1

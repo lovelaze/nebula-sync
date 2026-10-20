@@ -40,6 +40,7 @@ services:
   nebula-sync:
     image: ghcr.io/lovelaze/nebula-sync:latest
     container_name: nebula-sync
+    restart: unless-stopped
     environment:
     - PRIMARY=http://ph1.example.com|password
     - REPLICAS=http://ph2.example.com|password,http://ph3.example.com|password

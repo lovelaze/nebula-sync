@@ -2,7 +2,7 @@ FROM golang:1.26-alpine AS golang
 
 WORKDIR /app
 
-RUN apk add -U tzdata upx && \
+RUN apk add -U tzdata && \
     apk --update add ca-certificates
 
 COPY . .
@@ -17,8 +17,7 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOFLAGS="-a -trimpath -ldflags=-w -ldflags=-s -ldflags=-X=github.com/lovelaze/nebula-sync/version.Version=${VERSION} -o=nebula-sync"
 
-RUN go build . && \
-    upx -q nebula-sync
+RUN go build .
 
 FROM scratch
 

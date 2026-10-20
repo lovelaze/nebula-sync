@@ -30,13 +30,6 @@ builds:
       - goos: windows
         goarch: arm
 
-upx:
-  - enabled: true
-    goos: [linux]
-    compress: best
-    lzma: true
-    brute: true
-
 archives:
   - formats: ['tar.gz']
     format_overrides:

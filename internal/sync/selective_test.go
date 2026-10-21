@@ -52,7 +52,6 @@ func TestTarget_SelectiveSync(t *testing.T) {
 	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
 	replica.EXPECT().PatchConfig(mock.Anything).Once().Return(nil)
 
-	primary.EXPECT().PostRunGravity().Once().Return(nil)
 	replica.EXPECT().PostRunGravity().Once().Return(nil)
 
 	primary.EXPECT().DeleteSession().Once().Return(nil)

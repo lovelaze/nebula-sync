@@ -124,12 +124,9 @@ func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {
 }
 
 func (target *target) runGravity() error {
-	log.Info().Msg("Running gravity...")
+	log.Info().Msg("Running gravity on replicas...")
 
-	if err := target.Primary.PostRunGravity(); err != nil {
-		return err
-	}
-
+	// Only the replicas imported anything, so the primary's gravity database is left alone
 	for _, replica := range target.Replicas {
 		if err := retry.Fixed(func() error {
 			return replica.PostRunGravity()

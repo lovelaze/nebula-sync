@@ -84,7 +84,7 @@ The following environment variables can be specified:
 | Name                               | Default | Example         | Description                                        |
 |------------------------------------|---------|-----------------|----------------------------------------------------|
 | `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
-| `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
+| `RUN_GRAVITY`                      | false   | true            | Runs gravity on the replicas after syncing         |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
 | `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips TLS certificate verification                 |
 | `CLIENT_RETRY_DELAY_SECONDS`       | 1       | 5               | Seconds to delay between connection attempts       |

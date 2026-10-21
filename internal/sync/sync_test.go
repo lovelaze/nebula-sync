@@ -138,7 +138,6 @@ func Test_target_runGravity(t *testing.T) {
 		Client:   mockClient,
 	}
 
-	primary.EXPECT().PostRunGravity().Once().Return(nil)
 	replica.EXPECT().PostRunGravity().Once().Return(nil)
 
 	err := target.runGravity()

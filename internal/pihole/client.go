@@ -26,6 +26,7 @@ type Client interface {
 	PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error
 	GetConfig() (configResponse *model.ConfigResponse, err error)
 	PatchConfig(patchRequest *model.PatchConfigRequest) error
+	GetJSON(endpoint string) (map[string]any, error)
 	PostRunGravity() error
 	String() string
 	APIPath(target string) string
@@ -255,6 +256,38 @@ func (client *client) GetConfig() (*model.ConfigResponse, error) {
 	}
 
 	return &configResponse, client.wrapError(err, req)
+}
+
+// GetJSON fetches an API endpoint, such as "groups" or "lists", and decodes its JSON body.
+func (client *client) GetJSON(endpoint string) (map[string]any, error) {
+	client.logger.Debug().Str("endpoint", endpoint).Msg("Get json")
+	if err := client.auth.verify(); err != nil {
+		return nil, client.wrapError(err, nil)
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, client.APIPath(endpoint), nil)
+	if err != nil {
+		return nil, client.wrapError(err, req)
+	}
+	req.Header.Set("Sid", client.auth.sid)
+	req.Header.Set("User-Agent", userAgent)
+
+	response, err := client.httpClient.Do(req)
+	if err != nil {
+		return nil, client.wrapError(err, req)
+	}
+	defer response.Body.Close()
+
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+		return nil, client.wrapError(err, req)
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+		return nil, client.wrapError(err, req)
+	}
+
+	return body, nil
 }
 
 func (client *client) PatchConfig(patchRequest *model.PatchConfigRequest) error {

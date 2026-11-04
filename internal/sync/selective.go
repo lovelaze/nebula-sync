@@ -9,7 +9,7 @@ import (
 func (target *target) SelectiveSync(conf *config.Sync) error {
 	return target.sync(func() error {
 		return target.selective(conf)
-	}, "selective")
+	}, "selective", conf, conf.GravitySettings, conf.ConfigSettings)
 }
 
 func (target *target) selective(conf *config.Sync) error {

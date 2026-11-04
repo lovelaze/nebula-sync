@@ -21,16 +21,24 @@ type target struct {
 	Primary  pihole.Client
 	Replicas []pihole.Client
 	Client   *config.Client
+	changes  *changeTracker
 }
 
 func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
 	return &target{
 		Primary:  primary,
 		Replicas: replicas,
+		changes:  newChangeTracker(),
 	}
 }
 
-func (target *target) sync(syncFunc func() error, mode string) error {
+func (target *target) sync(
+	syncFunc func() error,
+	mode string,
+	conf *config.Sync,
+	gravitySettings *config.GravitySettings,
+	configSettings *config.ConfigSettings,
+) error {
 	var err error
 	log.Info().Str("mode", mode).Int("replicas", len(target.Replicas)).Msg("Running sync")
 
@@ -45,7 +53,29 @@ func (target *target) sync(syncFunc func() error, mode string) error {
 		return fmt.Errorf("authenticate: %w", err)
 	}
 
-	return syncFunc()
+	if conf == nil || !conf.SyncOnChange {
+		return syncFunc()
+	}
+
+	fingerprint, fpErr := target.fingerprint(gravitySettings, configSettings)
+	if fpErr != nil {
+		log.Warn().Err(fpErr).Msg("Unable to check primary for changes, syncing anyway")
+		return syncFunc()
+	}
+
+	due, reason := target.changes.due(fingerprint, conf.SyncOnChangeMaxAge)
+	if !due {
+		log.Info().Msg("No changes on primary since last sync, skipping")
+		return ErrNoChanges
+	}
+	log.Info().Str("reason", reason).Msg("Sync on change")
+
+	if err := syncFunc(); err != nil {
+		return err
+	}
+
+	target.changes.record(fingerprint)
+	return nil
 }
 
 func (target *target) authenticate() error {

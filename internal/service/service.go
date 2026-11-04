@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/robfig/cron/v3"
@@ -87,6 +88,11 @@ func (service *Service) sync(t sync.Target) error {
 		err = t.FullSync(service.conf.Sync)
 	} else {
 		err = t.SelectiveSync(service.conf.Sync)
+	}
+
+	if errors.Is(err, sync.ErrNoChanges) {
+		// nothing was synced: keep the last outcome for health checks and webhooks
+		return nil
 	}
 
 	service.runCallbacks(err)

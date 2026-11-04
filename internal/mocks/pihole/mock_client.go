@@ -59,14 +59,20 @@ type Client_APIPath_Call struct {
 }
 
 // APIPath is a helper method to define mock.On call
-//   - target
+//   - target string
 func (_e *Client_Expecter) APIPath(target interface{}) *Client_APIPath_Call {
 	return &Client_APIPath_Call{Call: _e.mock.On("APIPath", target)}
 }
 
 func (_c *Client_APIPath_Call) Run(run func(target string)) *Client_APIPath_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -180,6 +186,68 @@ func (_c *Client_GetConfig_Call) RunAndReturn(run func() (*model.ConfigResponse,
 	return _c
 }
 
+// GetJSON provides a mock function for the type Client
+func (_mock *Client) GetJSON(endpoint string) (map[string]any, error) {
+	ret := _mock.Called(endpoint)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetJSON")
+	}
+
+	var r0 map[string]any
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string) (map[string]any, error)); ok {
+		return returnFunc(endpoint)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string) map[string]any); ok {
+		r0 = returnFunc(endpoint)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]any)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
+		r1 = returnFunc(endpoint)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Client_GetJSON_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJSON'
+type Client_GetJSON_Call struct {
+	*mock.Call
+}
+
+// GetJSON is a helper method to define mock.On call
+//   - endpoint string
+func (_e *Client_Expecter) GetJSON(endpoint interface{}) *Client_GetJSON_Call {
+	return &Client_GetJSON_Call{Call: _e.mock.On("GetJSON", endpoint)}
+}
+
+func (_c *Client_GetJSON_Call) Run(run func(endpoint string)) *Client_GetJSON_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *Client_GetJSON_Call) Return(stringToV map[string]any, err error) *Client_GetJSON_Call {
+	_c.Call.Return(stringToV, err)
+	return _c
+}
+
+func (_c *Client_GetJSON_Call) RunAndReturn(run func(endpoint string) (map[string]any, error)) *Client_GetJSON_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTeleporter provides a mock function for the type Client
 func (_mock *Client) GetTeleporter() ([]byte, error) {
 	ret := _mock.Called()
@@ -258,14 +326,20 @@ type Client_PatchConfig_Call struct {
 }
 
 // PatchConfig is a helper method to define mock.On call
-//   - patchRequest
+//   - patchRequest *model.PatchConfigRequest
 func (_e *Client_Expecter) PatchConfig(patchRequest interface{}) *Client_PatchConfig_Call {
 	return &Client_PatchConfig_Call{Call: _e.mock.On("PatchConfig", patchRequest)}
 }
 
 func (_c *Client_PatchConfig_Call) Run(run func(patchRequest *model.PatchConfigRequest)) *Client_PatchConfig_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*model.PatchConfigRequest))
+		var arg0 *model.PatchConfigRequest
+		if args[0] != nil {
+			arg0 = args[0].(*model.PatchConfigRequest)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -391,15 +465,26 @@ type Client_PostTeleporter_Call struct {
 }
 
 // PostTeleporter is a helper method to define mock.On call
-//   - payload
-//   - teleporterRequest
+//   - payload []byte
+//   - teleporterRequest *model.PostTeleporterRequest
 func (_e *Client_Expecter) PostTeleporter(payload interface{}, teleporterRequest interface{}) *Client_PostTeleporter_Call {
 	return &Client_PostTeleporter_Call{Call: _e.mock.On("PostTeleporter", payload, teleporterRequest)}
 }
 
 func (_c *Client_PostTeleporter_Call) Run(run func(payload []byte, teleporterRequest *model.PostTeleporterRequest)) *Client_PostTeleporter_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].([]byte), args[1].(*model.PostTeleporterRequest))
+		var arg0 []byte
+		if args[0] != nil {
+			arg0 = args[0].([]byte)
+		}
+		var arg1 *model.PostTeleporterRequest
+		if args[1] != nil {
+			arg1 = args[1].(*model.PostTeleporterRequest)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

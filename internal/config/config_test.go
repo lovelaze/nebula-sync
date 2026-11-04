@@ -2,6 +2,7 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -60,6 +61,8 @@ func TestConfig_loadSync(t *testing.T) {
 	assert.True(t, conf.Sync.FullSync)
 	assert.Equal(t, "* * * * *", *conf.Sync.Cron)
 	assert.True(t, conf.Sync.RunGravity)
+	assert.False(t, conf.Sync.SyncOnChange)
+	assert.Equal(t, 24*time.Hour, conf.Sync.SyncOnChangeMaxAge)
 
 	assert.NotNil(t, conf.Sync.ConfigSettings)
 	assert.NotNil(t, conf.Sync.GravitySettings)
@@ -80,6 +83,19 @@ func TestConfig_loadSync(t *testing.T) {
 	assert.True(t, conf.Sync.GravitySettings.DomainlistByGroup)
 	assert.True(t, conf.Sync.GravitySettings.Client)
 	assert.True(t, conf.Sync.GravitySettings.ClientByGroup)
+}
+
+func TestConfig_loadSync_onChange(t *testing.T) {
+	conf := Config{}
+
+	t.Setenv("FULL_SYNC", "false")
+	t.Setenv("SYNC_ON_CHANGE", "true")
+	t.Setenv("SYNC_ON_CHANGE_MAX_AGE", "6h")
+
+	require.NoError(t, conf.loadSync())
+
+	assert.True(t, conf.Sync.SyncOnChange)
+	assert.Equal(t, 6*time.Hour, conf.Sync.SyncOnChangeMaxAge)
 }
 
 func TestRawConfig_Validate_Both(t *testing.T) {

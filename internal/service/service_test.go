@@ -4,11 +4,14 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
 	syncmock "github.com/lovelaze/nebula-sync/internal/mocks/sync"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
+	"github.com/lovelaze/nebula-sync/internal/sync"
 )
 
 func TestRun_full(t *testing.T) {
@@ -133,4 +136,29 @@ func TestRun_webhook_error_does_not_affect_result(t *testing.T) {
 
 	target.AssertCalled(t, "FullSync", conf.Sync)
 	callback.AssertCalled(t, "OnSuccess")
+}
+
+func TestRun_noChanges_skipsCallbacks(t *testing.T) {
+	conf := config.Config{
+		Primary:  model.PiHole{},
+		Replicas: []model.PiHole{},
+		Sync: &config.Sync{
+			FullSync:     false,
+			SyncOnChange: true,
+		},
+	}
+
+	target := syncmock.NewTarget(t)
+	callback := syncmock.NewCallback(t)
+
+	target.On("SelectiveSync", conf.Sync).Return(sync.ErrNoChanges)
+
+	service := NewService(target, conf, callback)
+
+	err := service.Run()
+	require.NoError(t, err)
+
+	callback.AssertNotCalled(t, "OnSuccess")
+	callback.AssertNotCalled(t, "OnFailure", mock.Anything)
+	assert.Empty(t, service.State.Stack)
 }

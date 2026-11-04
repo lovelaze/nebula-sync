@@ -9,7 +9,7 @@ import (
 func (target *target) FullSync(conf *config.Sync) error {
 	return target.sync(func() error {
 		return target.full(conf)
-	}, "full")
+	}, "full", conf, newFullSyncGravitySettings(), newFullSyncConfigSettings())
 }
 
 func (target *target) full(conf *config.Sync) error {

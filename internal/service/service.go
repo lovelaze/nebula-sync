@@ -67,6 +67,10 @@ func (service *Service) Run() error {
 	log.Info().Msgf("Starting nebula-sync %s", version.Version)
 	log.Debug().Str("config", service.conf.String()).Msgf("Settings")
 
+	if service.conf.Sync.SyncOnChange && service.conf.Sync.Cron == nil {
+		log.Warn().Msg("SYNC_ON_CHANGE has no effect without CRON: a single run always syncs")
+	}
+
 	if err := service.sync(service.target); err != nil {
 		return err
 	}

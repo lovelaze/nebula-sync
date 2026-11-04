@@ -141,10 +141,11 @@ Every sync imports a Teleporter archive on each replica, which restarts FTL ther
 
 - The check hashes what the sync would copy: the selected config sections (after include/exclude filters) and the enabled gravity tables (groups, adlists, domains, clients). Values Pi-hole updates on its own, such as adlist domain counts and status, are ignored, so a gravity run on the primary is not a change.
 - The hash is kept in memory, so the first run after a start always syncs, and a failed sync is retried on the next run.
-- Changes made directly on a replica are not detected. `SYNC_ON_CHANGE_MAX_AGE` (default `24h`) forces a sync after that long, which overwrites them again.
+- Only the primary is checked. Changes made directly on a replica, or a replica that was reset or replaced, are not detected until `SYNC_ON_CHANGE_MAX_AGE` (default `24h`) forces a sync, or nebula-sync is restarted.
 - DHCP leases are not tracked, as they change constantly. They are synced whenever a sync runs.
 - If the check fails, the sync runs as usual.
-- A skipped run does not trigger webhooks or change the health status.
+- A skipped run does not contact the replicas, trigger webhooks or change the health status.
+- It has no effect without `CRON`, as a single run always syncs.
 
 ### Webhooks
 

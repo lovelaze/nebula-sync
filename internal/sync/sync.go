@@ -2,6 +2,7 @@ package sync
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -40,50 +41,88 @@ func (target *target) sync(
 	configSettings *config.ConfigSettings,
 ) error {
 	var err error
+	replicasContacted := false
 	log.Info().Str("mode", mode).Int("replicas", len(target.Replicas)).Msg("Running sync")
 
 	defer func() {
 		if err != nil {
 			log.Error().Err(err).Msg("Error during sync")
 		}
-		target.deleteSessions()
+		log.Info().Msg("Invalidating sessions...")
+		target.deletePrimarySession()
+		if replicasContacted {
+			target.deleteReplicaSessions()
+		}
 	}()
 
-	if err := target.authenticate(); err != nil {
+	log.Info().Msg("Authenticating clients...")
+	if err := target.authenticatePrimary(); err != nil {
 		return fmt.Errorf("authenticate: %w", err)
 	}
 
-	if conf == nil || !conf.SyncOnChange {
-		return syncFunc()
+	// With SYNC_ON_CHANGE the primary is checked before the replicas are contacted,
+	// so a skipped run opens no replica sessions and does not fail on a replica
+	// that is down.
+	var fingerprint string
+	if conf != nil && conf.SyncOnChange {
+		var skip bool
+		fingerprint, skip = target.checkChanges(gravitySettings, configSettings, conf.SyncOnChangeMaxAge)
+		if skip {
+			return ErrNoChanges
+		}
 	}
 
-	fingerprint, fpErr := target.fingerprint(gravitySettings, configSettings)
-	if fpErr != nil {
-		log.Warn().Err(fpErr).Msg("Unable to check primary for changes, syncing anyway")
-		return syncFunc()
+	replicasContacted = true
+	if err := target.authenticateReplicas(); err != nil {
+		return fmt.Errorf("authenticate: %w", err)
 	}
-
-	due, reason := target.changes.due(fingerprint, conf.SyncOnChangeMaxAge)
-	if !due {
-		log.Info().Msg("No changes on primary since last sync, skipping")
-		return ErrNoChanges
-	}
-	log.Info().Str("reason", reason).Msg("Sync on change")
 
 	if err := syncFunc(); err != nil {
 		return err
 	}
 
-	target.changes.record(fingerprint)
+	if fingerprint != "" {
+		target.changes.record(fingerprint)
+	}
 	return nil
+}
+
+// checkChanges returns the primary's fingerprint and whether the sync can be
+// skipped. On error it returns an empty fingerprint and syncs anyway.
+func (target *target) checkChanges(
+	gravitySettings *config.GravitySettings,
+	configSettings *config.ConfigSettings,
+	maxAge time.Duration,
+) (string, bool) {
+	fingerprint, err := target.fingerprint(gravitySettings, configSettings)
+	if err != nil {
+		log.Warn().Err(err).Msg("Unable to check primary for changes, syncing anyway")
+		return "", false
+	}
+
+	due, reason := target.changes.due(fingerprint, maxAge)
+	if !due {
+		log.Info().Msg("No changes on primary since last sync, skipping")
+		return fingerprint, true
+	}
+
+	log.Info().Str("reason", reason).Msg("Sync on change")
+	return fingerprint, false
 }
 
 func (target *target) authenticate() error {
 	log.Info().Msg("Authenticating clients...")
-	if err := target.Primary.PostAuth(); err != nil {
+	if err := target.authenticatePrimary(); err != nil {
 		return err
 	}
+	return target.authenticateReplicas()
+}
 
+func (target *target) authenticatePrimary() error {
+	return target.Primary.PostAuth()
+}
+
+func (target *target) authenticateReplicas() error {
 	for _, replica := range target.Replicas {
 		if err := retry.Fixed(func() error {
 			return replica.PostAuth()
@@ -97,10 +136,17 @@ func (target *target) authenticate() error {
 
 func (target *target) deleteSessions() {
 	log.Info().Msg("Invalidating sessions...")
+	target.deletePrimarySession()
+	target.deleteReplicaSessions()
+}
+
+func (target *target) deletePrimarySession() {
 	if err := target.Primary.DeleteSession(); err != nil {
 		log.Warn().Msgf("Failed to invalidate session for target: %s", target.Primary.String())
 	}
+}
 
+func (target *target) deleteReplicaSessions() {
 	for _, replica := range target.Replicas {
 		if err := retry.Fixed(func() error {
 			return replica.DeleteSession()

@@ -117,11 +117,12 @@ func groupsResponse(name string) map[string]any {
 	}}
 }
 
-func expectSessions(primary, replica *piholemock.Client, times int) {
-	primary.EXPECT().PostAuth().Times(times).Return(nil)
-	replica.EXPECT().PostAuth().Times(times).Return(nil)
-	primary.EXPECT().DeleteSession().Times(times).Return(nil)
-	replica.EXPECT().DeleteSession().Times(times).Return(nil)
+// expectSessions: the primary is contacted on every run, replicas only on runs that sync.
+func expectSessions(primary, replica *piholemock.Client, runs, syncs int) {
+	primary.EXPECT().PostAuth().Times(runs).Return(nil)
+	primary.EXPECT().DeleteSession().Times(runs).Return(nil)
+	replica.EXPECT().PostAuth().Times(syncs).Return(nil)
+	replica.EXPECT().DeleteSession().Times(syncs).Return(nil)
 }
 
 func expectSync(primary, replica *piholemock.Client) {
@@ -137,7 +138,7 @@ func TestTarget_SelectiveSync_onChange(t *testing.T) {
 	target := NewTarget(primary, []pihole.Client{replica})
 	settings := onChangeSettings()
 
-	expectSessions(primary, replica, 3)
+	expectSessions(primary, replica, 3, 2)
 
 	// 1st run: no previous state, so it syncs
 	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
@@ -145,7 +146,7 @@ func TestTarget_SelectiveSync_onChange(t *testing.T) {
 	expectSync(primary, replica)
 	require.NoError(t, target.SelectiveSync(settings))
 
-	// 2nd run: same state (only "took" differs), so it skips
+	// 2nd run: same state (only "took" differs), so it skips without contacting the replica
 	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
 	unchanged := groupsResponse("Default")
 	unchanged["took"] = 0.009
@@ -165,7 +166,7 @@ func TestTarget_SelectiveSync_onChange_failedSyncIsRetried(t *testing.T) {
 	target := NewTarget(primary, []pihole.Client{replica})
 	settings := onChangeSettings()
 
-	expectSessions(primary, replica, 2)
+	expectSessions(primary, replica, 2, 2)
 
 	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
 	primary.EXPECT().GetJSON("groups").Once().Return(groupsResponse("Default"), nil)
@@ -184,10 +185,40 @@ func TestTarget_SelectiveSync_onChange_fingerprintErrorSyncs(t *testing.T) {
 	replica := piholemock.NewClient(t)
 	target := NewTarget(primary, []pihole.Client{replica})
 
-	expectSessions(primary, replica, 1)
+	expectSessions(primary, replica, 1, 1)
 	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
 	primary.EXPECT().GetJSON("groups").Once().Return(nil, errors.New("unreachable"))
 	expectSync(primary, replica)
 
 	require.NoError(t, target.SelectiveSync(onChangeSettings()))
+}
+
+func TestTarget_SelectiveSync_onChange_skipIgnoresDownReplica(t *testing.T) {
+	primary := piholemock.NewClient(t)
+	replica := piholemock.NewClient(t)
+	target := NewTarget(primary, []pihole.Client{replica})
+	settings := onChangeSettings()
+
+	// 1st run syncs while the replica is up
+	expectSessions(primary, replica, 2, 1)
+	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
+	primary.EXPECT().GetJSON("groups").Once().Return(groupsResponse("Default"), nil)
+	expectSync(primary, replica)
+	require.NoError(t, target.SelectiveSync(settings))
+
+	// 2nd run: nothing changed, so it skips; the replica is never called (strict mock)
+	primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
+	primary.EXPECT().GetJSON("groups").Once().Return(groupsResponse("Default"), nil)
+	require.ErrorIs(t, target.SelectiveSync(settings), ErrNoChanges)
+}
+
+func TestTarget_sync_primaryAuthFailure_skipsReplicas(t *testing.T) {
+	primary := piholemock.NewClient(t)
+	replica := piholemock.NewClient(t)
+	target := NewTarget(primary, []pihole.Client{replica})
+
+	primary.EXPECT().PostAuth().Once().Return(errors.New("denied"))
+	primary.EXPECT().DeleteSession().Once().Return(nil)
+
+	require.Error(t, target.SelectiveSync(onChangeSettings()))
 }

@@ -85,6 +85,10 @@ The following environment variables can be specified:
 |------------------------------------|---------|-----------------|----------------------------------------------------|
 | `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
 | `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
+| `SYNC_ON_CHANGE`                   | false   | true            | Skips a scheduled sync when nothing has changed on the primary (see [Sync on change](#sync-on-change)) |
+| `SYNC_ON_CHANGE_MAX_AGE`           | 24h     | 6h              | Syncs anyway after this long without a sync, `0` to disable |
+| `SYNC_ON_CHANGE_QUIET`             | false   | true            | With `SYNC_ON_CHANGE`, waits until a change has been stable for one run before syncing |
+| `SYNC_ON_CHANGE_QUIET_MAX`         | 30m     | 1h              | Syncs anyway if the primary is still changing after this long, `0` to wait indefinitely |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
 | `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips TLS certificate verification                 |
 | `CLIENT_RETRY_DELAY_SECONDS`       | 1       | 5               | Seconds to delay between connection attempts       |
@@ -132,6 +136,19 @@ Config keys are relative to the section and are **case sensitive**. For example,
 | `SYNC_CONFIG_MISC_EXCLUDE`        | nice,delay_startup         | Misc config keys to exclude                    |
 | `SYNC_CONFIG_DEBUG_INCLUDE`       | database,networking        | Debug config keys to include                   |
 | `SYNC_CONFIG_DEBUG_EXCLUDE`       | database,networking        | Debug config keys to exclude                   |
+
+### Sync on change
+
+Every sync imports a Teleporter archive on each replica, which restarts FTL there. With `SYNC_ON_CHANGE=true`, each scheduled run first checks the primary and only syncs when something that would be synced has changed, so `CRON` can run often (for example `*/5 * * * *`) for low latency without restarting the replicas every time.
+
+- The check hashes what the sync would copy: the selected config sections (after include/exclude filters) and the enabled gravity tables (groups, adlists, domains, clients). Values Pi-hole updates on its own, such as adlist domain counts and status, are ignored, so a gravity run on the primary is not a change.
+- The hash is kept in memory, so the first run after a start always syncs, and a failed sync is retried on the next run.
+- Only the primary is checked. Changes made directly on a replica, or a replica that was reset or replaced, are not detected until `SYNC_ON_CHANGE_MAX_AGE` (default `24h`) forces a sync, or nebula-sync is restarted.
+- DHCP leases are not tracked, as they change constantly. They are synced whenever a sync runs.
+- If the check fails, the sync runs as usual.
+- With `SYNC_ON_CHANGE_QUIET=true`, a change is synced only once a later run sees it unchanged, so a burst of edits on the primary (for example several list or group changes in a row) becomes a single sync and a single FTL restart on each replica. The cost is up to one `CRON` interval of extra delay. If the primary is still changing after `SYNC_ON_CHANGE_QUIET_MAX`, it syncs anyway. The first sync after a start and the max-age sync are never delayed.
+- A skipped run does not contact the replicas, trigger webhooks or change the health status.
+- It has no effect without `CRON`, as a single run always syncs.
 
 ### Webhooks
 

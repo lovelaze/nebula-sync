@@ -180,6 +180,62 @@ func (_c *Client_GetConfig_Call) RunAndReturn(run func() (*model.ConfigResponse,
 	return _c
 }
 
+// GetJSON provides a mock function for the type Client
+func (_mock *Client) GetJSON(endpoint string) (map[string]any, error) {
+	ret := _mock.Called(endpoint)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetJSON")
+	}
+
+	var r0 map[string]any
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string) (map[string]any, error)); ok {
+		return returnFunc(endpoint)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string) map[string]any); ok {
+		r0 = returnFunc(endpoint)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string]any)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(string) error); ok {
+		r1 = returnFunc(endpoint)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Client_GetJSON_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetJSON'
+type Client_GetJSON_Call struct {
+	*mock.Call
+}
+
+// GetJSON is a helper method to define mock.On call
+//   - endpoint
+func (_e *Client_Expecter) GetJSON(endpoint interface{}) *Client_GetJSON_Call {
+	return &Client_GetJSON_Call{Call: _e.mock.On("GetJSON", endpoint)}
+}
+
+func (_c *Client_GetJSON_Call) Run(run func(endpoint string)) *Client_GetJSON_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *Client_GetJSON_Call) Return(stringToV map[string]any, err error) *Client_GetJSON_Call {
+	_c.Call.Return(stringToV, err)
+	return _c
+}
+
+func (_c *Client_GetJSON_Call) RunAndReturn(run func(endpoint string) (map[string]any, error)) *Client_GetJSON_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTeleporter provides a mock function for the type Client
 func (_mock *Client) GetTeleporter() ([]byte, error) {
 	ret := _mock.Called()

@@ -59,9 +59,11 @@ var (
 // changeTracker remembers the fingerprint of the primary at the last successful
 // sync. It is held in memory only, so the first sync after a start always runs.
 type changeTracker struct {
-	fingerprint string
-	lastSync    time.Time
-	now         func() time.Time
+	fingerprint  string
+	lastSync     time.Time
+	pending      string    // changed fingerprint waiting for a quiet interval
+	pendingSince time.Time // when the first change of the current burst was seen
+	now          func() time.Time
 }
 
 func newChangeTracker() *changeTracker {
@@ -82,9 +84,27 @@ func (c *changeTracker) due(fingerprint string, maxAge time.Duration) (bool, str
 	}
 }
 
+// settle implements SYNC_ON_CHANGE_QUIET: a changed fingerprint is only synced once a later
+// run sees it unchanged, so a burst of edits becomes one sync. If the primary keeps changing,
+// it syncs anyway once quietMax has passed since the first change of the burst (0 = no limit).
+func (c *changeTracker) settle(fingerprint string, quietMax time.Duration) (bool, string) {
+	switch {
+	case c.pending == fingerprint:
+		return true, "changes detected, quiet for one interval"
+	case c.pending != "" && quietMax > 0 && c.now().Sub(c.pendingSince) >= quietMax:
+		return true, "changes detected, still changing after quiet max"
+	}
+	if c.pending == "" {
+		c.pendingSince = c.now()
+	}
+	c.pending = fingerprint
+	return false, ""
+}
+
 func (c *changeTracker) record(fingerprint string) {
 	c.fingerprint = fingerprint
 	c.lastSync = c.now()
+	c.pending = ""
 }
 
 // fingerprint hashes everything a sync with these settings would copy from the

@@ -63,6 +63,8 @@ func TestConfig_loadSync(t *testing.T) {
 	assert.True(t, conf.Sync.RunGravity)
 	assert.False(t, conf.Sync.SyncOnChange)
 	assert.Equal(t, 24*time.Hour, conf.Sync.SyncOnChangeMaxAge)
+	assert.False(t, conf.Sync.SyncOnChangeQuiet)
+	assert.Equal(t, 30*time.Minute, conf.Sync.SyncOnChangeQuietMax)
 
 	assert.NotNil(t, conf.Sync.ConfigSettings)
 	assert.NotNil(t, conf.Sync.GravitySettings)
@@ -91,11 +93,15 @@ func TestConfig_loadSync_onChange(t *testing.T) {
 	t.Setenv("FULL_SYNC", "false")
 	t.Setenv("SYNC_ON_CHANGE", "true")
 	t.Setenv("SYNC_ON_CHANGE_MAX_AGE", "6h")
+	t.Setenv("SYNC_ON_CHANGE_QUIET", "true")
+	t.Setenv("SYNC_ON_CHANGE_QUIET_MAX", "15m")
 
 	require.NoError(t, conf.loadSync())
 
 	assert.True(t, conf.Sync.SyncOnChange)
 	assert.Equal(t, 6*time.Hour, conf.Sync.SyncOnChangeMaxAge)
+	assert.True(t, conf.Sync.SyncOnChangeQuiet)
+	assert.Equal(t, 15*time.Minute, conf.Sync.SyncOnChangeQuietMax)
 }
 
 func TestRawConfig_Validate_Both(t *testing.T) {

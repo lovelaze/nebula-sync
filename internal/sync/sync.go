@@ -2,7 +2,6 @@ package sync
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -66,7 +65,7 @@ func (target *target) sync(
 	var fingerprint string
 	if conf != nil && conf.SyncOnChange {
 		var skip bool
-		fingerprint, skip = target.checkChanges(gravitySettings, configSettings, conf.SyncOnChangeMaxAge)
+		fingerprint, skip = target.checkChanges(gravitySettings, configSettings, conf)
 		if skip {
 			return ErrNoChanges
 		}
@@ -92,7 +91,7 @@ func (target *target) sync(
 func (target *target) checkChanges(
 	gravitySettings *config.GravitySettings,
 	configSettings *config.ConfigSettings,
-	maxAge time.Duration,
+	conf *config.Sync,
 ) (string, bool) {
 	fingerprint, err := target.fingerprint(gravitySettings, configSettings)
 	if err != nil {
@@ -100,10 +99,19 @@ func (target *target) checkChanges(
 		return "", false
 	}
 
-	due, reason := target.changes.due(fingerprint, maxAge)
+	due, reason := target.changes.due(fingerprint, conf.SyncOnChangeMaxAge)
 	if !due {
+		target.changes.pending = "" // a change that was reverted before syncing
 		log.Info().Msg("No changes on primary since last sync, skipping")
 		return fingerprint, true
+	}
+
+	if conf.SyncOnChangeQuiet && reason == "changes detected" {
+		var ready bool
+		if ready, reason = target.changes.settle(fingerprint, conf.SyncOnChangeQuietMax); !ready {
+			log.Info().Msg("Changes detected on primary, waiting for a quiet interval before syncing")
+			return fingerprint, true
+		}
 	}
 
 	log.Info().Str("reason", reason).Msg("Sync on change")

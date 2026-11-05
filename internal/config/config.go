@@ -19,14 +19,16 @@ type Config struct {
 }
 
 type Sync struct {
-	FullSync           bool          `required:"true" envconfig:"FULL_SYNC"`
-	Cron               *string       `                envconfig:"CRON"`
-	RunGravity         bool          `                envconfig:"RUN_GRAVITY"            default:"false"`
-	SyncOnChange       bool          `                envconfig:"SYNC_ON_CHANGE"         default:"false"`
-	SyncOnChangeMaxAge time.Duration `                envconfig:"SYNC_ON_CHANGE_MAX_AGE" default:"24h"`
-	GravitySettings    *GravitySettings
-	ConfigSettings     *ConfigSettings  `                                                                   ignored:"true"`
-	WebhookSettings    *WebhookSettings `                                                                   ignored:"true"`
+	FullSync             bool          `required:"true" envconfig:"FULL_SYNC"`
+	Cron                 *string       `                envconfig:"CRON"`
+	RunGravity           bool          `                envconfig:"RUN_GRAVITY"              default:"false"`
+	SyncOnChange         bool          `                envconfig:"SYNC_ON_CHANGE"           default:"false"`
+	SyncOnChangeMaxAge   time.Duration `                envconfig:"SYNC_ON_CHANGE_MAX_AGE"   default:"24h"`
+	SyncOnChangeQuiet    bool          `                envconfig:"SYNC_ON_CHANGE_QUIET"     default:"false"`
+	SyncOnChangeQuietMax time.Duration `                envconfig:"SYNC_ON_CHANGE_QUIET_MAX" default:"30m"`
+	GravitySettings      *GravitySettings
+	ConfigSettings       *ConfigSettings  `                                                                     ignored:"true"`
+	WebhookSettings      *WebhookSettings `                                                                     ignored:"true"`
 }
 
 type GravitySettings struct {

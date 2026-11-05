@@ -222,3 +222,92 @@ func TestTarget_sync_primaryAuthFailure_skipsReplicas(t *testing.T) {
 
 	require.Error(t, target.SelectiveSync(onChangeSettings()))
 }
+
+func TestChangeTracker_settle(t *testing.T) {
+	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	tracker := newChangeTracker()
+	tracker.now = func() time.Time { return now }
+	tracker.record("a")
+
+	ready, _ := tracker.settle("b", 30*time.Minute)
+	assert.False(t, ready, "first sighting of a change waits")
+
+	now = now.Add(5 * time.Minute)
+	ready, _ = tracker.settle("c", 30*time.Minute)
+	assert.False(t, ready, "still changing, keeps waiting")
+
+	now = now.Add(5 * time.Minute)
+	ready, reason := tracker.settle("c", 30*time.Minute)
+	assert.True(t, ready, "unchanged for one interval")
+	assert.Equal(t, "changes detected, quiet for one interval", reason)
+
+	tracker.record("c")
+	assert.Empty(t, tracker.pending)
+}
+
+func TestChangeTracker_settle_quietMax(t *testing.T) {
+	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	tracker := newChangeTracker()
+	tracker.now = func() time.Time { return now }
+	tracker.record("a")
+
+	for i, fp := range []string{"b", "c", "d"} {
+		ready, _ := tracker.settle(fp, 30*time.Minute)
+		assert.False(t, ready, "change %d waits", i)
+		now = now.Add(10 * time.Minute)
+	}
+	ready, reason := tracker.settle("e", 30*time.Minute)
+	assert.True(t, ready, "still changing after quiet max syncs anyway")
+	assert.Equal(t, "changes detected, still changing after quiet max", reason)
+}
+
+func quietSettings() *config.Sync {
+	s := onChangeSettings()
+	s.SyncOnChangeQuiet = true
+	s.SyncOnChangeQuietMax = 30 * time.Minute
+	return s
+}
+
+func TestTarget_SelectiveSync_onChange_quiet(t *testing.T) {
+	primary := piholemock.NewClient(t)
+	replica := piholemock.NewClient(t)
+	target := NewTarget(primary, []pihole.Client{replica})
+	settings := quietSettings()
+
+	run := func(group string) error {
+		primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
+		primary.EXPECT().GetJSON("groups").Once().Return(groupsResponse(group), nil)
+		return target.SelectiveSync(settings)
+	}
+
+	// runs: first sync, change seen (wait), changed again (wait), quiet (sync), unchanged (skip)
+	expectSessions(primary, replica, 5, 2)
+
+	expectSync(primary, replica)
+	require.NoError(t, run("Default"), "first sync is not delayed")
+	require.ErrorIs(t, run("IoT"), ErrNoChanges, "change seen: wait for a quiet interval")
+	require.ErrorIs(t, run("IoT2"), ErrNoChanges, "still changing: keep waiting")
+	expectSync(primary, replica)
+	require.NoError(t, run("IoT2"), "quiet for one interval: sync once")
+	require.ErrorIs(t, run("IoT2"), ErrNoChanges, "no further changes: skip")
+}
+
+func TestTarget_SelectiveSync_onChange_quiet_revertedChange(t *testing.T) {
+	primary := piholemock.NewClient(t)
+	replica := piholemock.NewClient(t)
+	target := NewTarget(primary, []pihole.Client{replica})
+	settings := quietSettings()
+
+	run := func(group string) error {
+		primary.EXPECT().GetConfig().Once().Return(emptyConfigResponse(), nil)
+		primary.EXPECT().GetJSON("groups").Once().Return(groupsResponse(group), nil)
+		return target.SelectiveSync(settings)
+	}
+
+	expectSessions(primary, replica, 4, 1)
+	expectSync(primary, replica)
+	require.NoError(t, run("Default"))
+	require.ErrorIs(t, run("Tmp"), ErrNoChanges, "change seen: wait")
+	require.ErrorIs(t, run("Default"), ErrNoChanges, "reverted before syncing: nothing to do")
+	require.ErrorIs(t, run("Tmp"), ErrNoChanges, "a new change starts a fresh wait, not a sync")
+}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/lovelaze/nebula-sync/internal/config"
 	piholemock "github.com/lovelaze/nebula-sync/internal/mocks/pihole"
@@ -83,8 +84,9 @@ func Test_target_syncTeleporters(t *testing.T) {
 	primary.EXPECT().GetTeleporter().Once().Return([]byte{}, nil)
 	replica.EXPECT().PostTeleporter([]byte{}, createPostTeleporterRequest(&gravitySettings)).Once().Return(nil)
 
-	err := target.syncTeleporters(&gravitySettings)
-	assert.NoError(t, err)
+	merge, err := target.syncTeleporters(&gravitySettings, false)
+	require.NoError(t, err)
+	assert.Nil(t, merge)
 }
 
 func Test_target_syncConfigs(t *testing.T) {

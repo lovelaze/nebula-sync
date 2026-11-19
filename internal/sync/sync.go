@@ -9,6 +9,7 @@ import (
 	"github.com/lovelaze/nebula-sync/internal/pihole"
 	"github.com/lovelaze/nebula-sync/internal/pihole/model"
 	"github.com/lovelaze/nebula-sync/internal/sync/filter"
+	"github.com/lovelaze/nebula-sync/internal/sync/leases"
 	"github.com/lovelaze/nebula-sync/internal/sync/retry"
 )
 
@@ -21,6 +22,9 @@ type target struct {
 	Primary  pihole.Client
 	Replicas []pihole.Client
 	Client   *config.Client
+	// leaseSnapshots holds, per replica, the DHCP leases last written to it
+	// by a lease merge. It lives as long as the process.
+	leaseSnapshots map[string]leases.Snapshot
 }
 
 func NewTarget(primary pihole.Client, replicas []pihole.Client) Target {
@@ -67,7 +71,10 @@ func (target *target) authenticate() error {
 
 func (target *target) deleteSessions() {
 	log.Info().Msg("Invalidating sessions...")
-	if err := target.Primary.DeleteSession(); err != nil {
+	// Retried like the replicas: a merged lease import restarts the primary's FTL.
+	if err := retry.Fixed(func() error {
+		return target.Primary.DeleteSession()
+	}, retry.AttemptsDeleteSession); err != nil {
 		log.Warn().Msgf("Failed to invalidate session for target: %s", target.Primary.String())
 	}
 
@@ -80,11 +87,14 @@ func (target *target) deleteSessions() {
 	}
 }
 
-func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) error {
+// syncTeleporters copies the primary's teleporter archive to the replicas.
+// With mergeLeases, the archive carries the merged DHCP leases instead of the
+// primary's; the returned merge tells whether the primary needs them too.
+func (target *target) syncTeleporters(gravitySettings *config.GravitySettings, mergeLeases bool) (*leaseMerge, error) {
 	log.Info().Msg("Syncing teleporters...")
 	conf, err := target.Primary.GetTeleporter()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var teleporterRequest *model.PostTeleporterRequest
@@ -92,15 +102,32 @@ func (target *target) syncTeleporters(gravitySettings *config.GravitySettings) e
 		teleporterRequest = createPostTeleporterRequest(gravitySettings)
 	}
 
+	var merge *leaseMerge
+	if mergeLeases {
+		if merge, err = target.mergeDHCPLeases(conf); err != nil {
+			return nil, fmt.Errorf("merge dhcp leases: %w", err)
+		}
+		if conf, err = leases.ReplaceInTeleporter(conf, merge.result.File.Bytes()); err != nil {
+			return nil, fmt.Errorf("merge dhcp leases: %w", err)
+		}
+		// A nil request imports everything, leases included.
+		if teleporterRequest != nil {
+			teleporterRequest.DHCPLeases = true
+		}
+	}
+
 	for _, replica := range target.Replicas {
 		if err := retry.Fixed(func() error {
 			return replica.PostTeleporter(conf, teleporterRequest)
 		}, retry.AttemptsPostTeleporter); err != nil {
-			return err
+			return nil, err
+		}
+		if merge != nil {
+			target.rememberLeases(replica, merge)
 		}
 	}
 
-	return err
+	return merge, nil
 }
 
 func (target *target) syncConfigs(configSettings *config.ConfigSettings) error {

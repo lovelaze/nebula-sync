@@ -180,6 +180,61 @@ func (_c *Client_GetConfig_Call) RunAndReturn(run func() (*model.ConfigResponse,
 	return _c
 }
 
+// GetDHCPLeases provides a mock function for the type Client
+func (_mock *Client) GetDHCPLeases() ([]model.DHCPLease, error) {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDHCPLeases")
+	}
+
+	var r0 []model.DHCPLease
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func() ([]model.DHCPLease, error)); ok {
+		return returnFunc()
+	}
+	if returnFunc, ok := ret.Get(0).(func() []model.DHCPLease); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.DHCPLease)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func() error); ok {
+		r1 = returnFunc()
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// Client_GetDHCPLeases_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDHCPLeases'
+type Client_GetDHCPLeases_Call struct {
+	*mock.Call
+}
+
+// GetDHCPLeases is a helper method to define mock.On call
+func (_e *Client_Expecter) GetDHCPLeases() *Client_GetDHCPLeases_Call {
+	return &Client_GetDHCPLeases_Call{Call: _e.mock.On("GetDHCPLeases")}
+}
+
+func (_c *Client_GetDHCPLeases_Call) Run(run func()) *Client_GetDHCPLeases_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Client_GetDHCPLeases_Call) Return(dHCPLeases []model.DHCPLease, err error) *Client_GetDHCPLeases_Call {
+	_c.Call.Return(dHCPLeases, err)
+	return _c
+}
+
+func (_c *Client_GetDHCPLeases_Call) RunAndReturn(run func() ([]model.DHCPLease, error)) *Client_GetDHCPLeases_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetTeleporter provides a mock function for the type Client
 func (_mock *Client) GetTeleporter() ([]byte, error) {
 	ret := _mock.Called()

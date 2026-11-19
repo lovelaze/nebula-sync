@@ -85,6 +85,7 @@ The following environment variables can be specified:
 |------------------------------------|---------|-----------------|----------------------------------------------------|
 | `CRON`                             | n/a     | `0 * * * *`     | Specifies the cron schedule for synchronization    |
 | `RUN_GRAVITY`                      | false   | true            | Specifies whether to run gravity after syncing     |
+| `MERGE_DHCP_LEASES`                | false   | true            | Merges DHCP leases of all instances, see [below](#merging-dhcp-leases) |
 | `TZ`                               | n/a     | `Europe/London` | Specifies the timezone for logs and cron           |
 | `CLIENT_SKIP_TLS_VERIFICATION`     | false   | true            | Skips TLS certificate verification                 |
 | `CLIENT_RETRY_DELAY_SECONDS`       | 1       | 5               | Seconds to delay between connection attempts       |
@@ -178,11 +179,22 @@ WEBHOOK_SYNC_FAILURE_HEADERS=Content-Type:application/json
 
 ## Notes / Known issues
 
+### Merging DHCP leases
+When a replica takes over as DHCP server while the primary is down (e.g. with keepalived), the leases it hands out are unknown to the primary once it is back: the primary does not resolve those hosts, and `SYNC_GRAVITY_DHCP_LEASES` would overwrite them on the replica with the primary's leases.
+
+With `MERGE_DHCP_LEASES=true`, every sync merges the leases of the primary and of all replicas, and writes the result to every instance instead of copying the primary's leases (it works with both `FULL_SYNC` values and implies `SYNC_GRAVITY_DHCP_LEASES`):
+- When two leases conflict, the one that expires last wins. Leases for the same address conflict, and so do IPv4 leases for the same MAC address on different addresses. On a tie the primary's lease is kept. Expired leases are dropped.
+- A replica only contributes leases it handed out or renewed itself. Leases nebula-sync wrote to it in an earlier sync are copies, and are ignored, so a lease the primary released is not brought back. This record is kept in memory: in the first sync after nebula-sync starts, all of a replica's leases count.
+- Importing leases restarts Pi-hole FTL, so the primary only imports the merged leases when a replica holds leases it lacks, i.e. once after a failover. This happens as the last step of the sync.
+- The primary keeps its DHCPv6 server DUID, and replicas get the primary's, as with `SYNC_GRAVITY_DHCP_LEASES`.
+- The merge writes to the primary: with an app password, enable `webserver.api.app_sudo` on the primary too (see below).
+- If several instances serve DHCP at the same time, the primary imports leases (and restarts) in every sync where a replica handed out a lease.
+
 ### Default user of Docker container / Docker secrets example
 By default, the Docker container runs as user `1001`. If you are using Docker secrets, the user that is running the container will need read permissions to the files that the Docker secrets reference. If the user does not have the right permissions you will receive an error `Failed to initialize service error="open /run/secrets/primary: permission denied"`. To avoid this error, either make sure to `chown 1001 ./your/secretfiles && chmod 400 ./your/secretfiles` or use the [`user` directive in Docker Compose](https://docs.docker.com/reference/compose-file/services/#user) to change the user that the container runs as to a user of your choice - and then make sure to update your secret files' ownership to that user. In the example [docker-compose-with-secrets.yml](examples/docker-compose-with-secrets.yml), user `1234` owns `./secrets/primary.txt` and `./secrets/replicas.txt` and both have `-r--------` permissions.
 
 ### App passwords and authentication errors
-When using Pi-hole's app passwords ("Configure app password" in the Web interface / API settings page) with nebula-sync, you should enable the Pi-hole setting `webserver.api.app_sudo` on your `REPLICAS` servers or you may receive authentication errors. To configure this setting, perform one of the following:
+When using Pi-hole's app passwords ("Configure app password" in the Web interface / API settings page) with nebula-sync, you should enable the Pi-hole setting `webserver.api.app_sudo` on your `REPLICAS` servers (and on your `PRIMARY` with `MERGE_DHCP_LEASES=true`) or you may receive authentication errors. To configure this setting, perform one of the following:
 - From the command line, execute `sudo pihole-FTL --config webserver.api.app_sudo true`. Repeat for each replica.
 - From the Pi-hole web UI, go to Settings -> All Settings. Toggle the "Modified settings / All settings" slider in the upper right to show "All settings". Choose the "Webserver and API" section. Check the "Enabled" box under `webserver.api.app_sudo` and then click "Save & Apply". Repeat for each replica.
 - With the text editor of your choice, edit the `/etc/pihole/pihole.toml` file. Find the `app_sudo = false` line under `[webserver.api]` and modify it to read `app_sudo = true`. Save the file and restart the pihole-FTL service. Repeat for each replica.

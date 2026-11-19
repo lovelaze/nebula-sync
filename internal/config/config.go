@@ -20,10 +20,11 @@ type Config struct {
 type Sync struct {
 	FullSync        bool    `required:"true" envconfig:"FULL_SYNC"`
 	Cron            *string `                envconfig:"CRON"`
-	RunGravity      bool    `                envconfig:"RUN_GRAVITY" default:"false"`
+	RunGravity      bool    `                envconfig:"RUN_GRAVITY"       default:"false"`
+	MergeDHCPLeases bool    `                envconfig:"MERGE_DHCP_LEASES" default:"false"`
 	GravitySettings *GravitySettings
-	ConfigSettings  *ConfigSettings  `                                                        ignored:"true"`
-	WebhookSettings *WebhookSettings `                                                        ignored:"true"`
+	ConfigSettings  *ConfigSettings  `                                                              ignored:"true"`
+	WebhookSettings *WebhookSettings `                                                              ignored:"true"`
 }
 
 type GravitySettings struct {

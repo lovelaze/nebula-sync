@@ -24,6 +24,7 @@ type Client interface {
 	DeleteSession() error
 	GetTeleporter() ([]byte, error)
 	PostTeleporter(payload []byte, teleporterRequest *model.PostTeleporterRequest) error
+	GetDHCPLeases() ([]model.DHCPLease, error)
 	GetConfig() (configResponse *model.ConfigResponse, err error)
 	PatchConfig(patchRequest *model.PatchConfigRequest) error
 	PostRunGravity() error
@@ -219,6 +220,37 @@ func (client *client) PostTeleporter(payload []byte, teleporterRequest *model.Po
 	}
 
 	return nil
+}
+
+func (client *client) GetDHCPLeases() ([]model.DHCPLease, error) {
+	client.logger.Debug().Msg("Get DHCP leases")
+	if err := client.auth.verify(); err != nil {
+		return nil, client.wrapError(err, nil)
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, client.APIPath("dhcp/leases"), nil)
+	if err != nil {
+		return nil, client.wrapError(err, req)
+	}
+	req.Header.Set("Sid", client.auth.sid)
+	req.Header.Set("User-Agent", userAgent)
+
+	response, err := client.httpClient.Do(req)
+	if err != nil {
+		return nil, client.wrapError(err, req)
+	}
+	defer response.Body.Close()
+
+	if err := successfulHTTPStatus(response.StatusCode); err != nil {
+		return nil, client.wrapError(err, req)
+	}
+
+	var leasesResponse model.DHCPLeasesResponse
+	if err := json.NewDecoder(response.Body).Decode(&leasesResponse); err != nil {
+		return nil, client.wrapError(err, req)
+	}
+
+	return leasesResponse.Leases, nil
 }
 
 func (client *client) GetConfig() (*model.ConfigResponse, error) {

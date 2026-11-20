@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -55,20 +56,37 @@ func (suite *testSuite) importLeases(ph *PiHoleContainer, content string) {
 
 	client := suite.client(ph)
 	suite.Require().NoError(client.PostTeleporter(archive, &model.PostTeleporterRequest{DHCPLeases: true}))
-	suite.waitForRestart(ph)
+	ph.waitForRestart()
 	suite.waitForLeases(ph, len(leases.Parse([]byte(content)).Leases))
 }
 
 // waitForRestart waits until FTL goes down after an import: it writes the
 // imported files before answering and restarts afterwards.
-func (suite *testSuite) waitForRestart(ph *PiHoleContainer) {
+func (c *PiHoleContainer) waitForRestart() {
 	deadline := time.Now().Add(restartWindow)
 	for time.Now().Before(deadline) {
-		if err := pihole.NewClient(ph.piHole(), http.DefaultClient).PostAuth(); err != nil {
+		if !c.apiUp() {
 			return
 		}
 		time.Sleep(restartPoll)
 	}
+}
+
+// apiUp reports whether the API answers. It does not log in: a session per
+// poll would exhaust Pi-hole's sessions.
+func (c *PiHoleContainer) apiUp() bool {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, c.ConnectionString(false)+"/api/auth", nil)
+	if err != nil {
+		return false
+	}
+
+	response, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return false
+	}
+	_ = response.Body.Close()
+
+	return true
 }
 
 // waitForLeases polls a Pi-hole, which may be restarting, until it reports count leases.

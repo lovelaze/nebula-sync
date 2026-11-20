@@ -17,6 +17,18 @@ type AuthResponse struct {
 	} `json:"session"`
 }
 
+type DHCPLease struct {
+	Expires  int64  `json:"expires"`
+	Name     string `json:"name"`
+	HWAddr   string `json:"hwaddr"`
+	IP       string `json:"ip"`
+	ClientID string `json:"clientid"`
+}
+
+type DHCPLeasesResponse struct {
+	Leases []DHCPLease `json:"leases"`
+}
+
 type ConfigResponse struct {
 	Config map[string]any `json:"config"`
 }

@@ -16,7 +16,8 @@ func (target *target) full(conf *config.Sync) error {
 	gravitySettings := newFullSyncGravitySettings()
 	configSettings := newFullSyncConfigSettings()
 
-	if err := target.syncTeleporters(gravitySettings); err != nil {
+	merge, err := target.syncTeleporters(gravitySettings, conf.MergeDHCPLeases)
+	if err != nil {
 		return fmt.Errorf("sync teleporters: %w", err)
 	}
 
@@ -28,6 +29,11 @@ func (target *target) full(conf *config.Sync) error {
 		if err := target.runGravity(); err != nil {
 			return fmt.Errorf("run gravity: %w", err)
 		}
+	}
+
+	// Last: importing leases restarts the primary's FTL.
+	if err := target.updatePrimaryLeases(merge); err != nil {
+		return fmt.Errorf("update primary dhcp leases: %w", err)
 	}
 	return nil
 }

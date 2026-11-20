@@ -85,6 +85,13 @@ func (suite *clientTestSuite) TestClient_GetConfig() {
 	suite.NotNil(suite.T(), conf)
 }
 
+func (suite *clientTestSuite) TestClient_GetDHCPLeases() {
+	leases, err := suite.client.GetDHCPLeases()
+
+	suite.Require().NoError(err)
+	suite.NotNil(leases)
+}
+
 func (suite *clientTestSuite) TestClient_PatchConfig() {
 	request := model.PatchConfigRequest{
 		Config: model.PatchConfig{

@@ -12,6 +12,7 @@ import (
 
 const (
 	AttemptsPostTeleporter = 5
+	AttemptsGetDHCPLeases  = 5
 	AttemptsPatchConfig    = 5
 	AttemptsPostRunGravity = 5
 	AttemptsPostAuth       = 3
